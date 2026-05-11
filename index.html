@@ -6,42 +6,27 @@
 
   <title>EcoSolutions</title>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <header>
-    <h1 id="screen-title">EcoSolutions</h1>
+  <h1>EcoSolutions Dashboard</h1>
 
-    <button class="theme-toggle" onclick="toggleTheme()">
-      Toggle Theme
-    </button>
-  </header>
+  <p>Points: <strong id="points">120</strong></p>
 
-  <section id="dashboard">
+  <button onclick="redeem(20)">Redeem</button>
 
-    <h2>Dashboard</h2>
+  <canvas id="pointsChart"></canvas>
 
-    <p>
-      Points:
-      <strong id="points">120</strong>
-    </p>
-
-    <button class="btn" onclick="redeem(20)">
-      Redeem Reward
-    </button>
-
-    <div class="chart-container">
-      <canvas id="pointsChart"></canvas>
-    </div>
-
-    <div id="feedback"></div>
-
-  </section>
-
+  <!-- JS must come LAST -->
   <script src="app.js"></script>
 
 </body>

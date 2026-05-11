@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>EcoSolutions</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <header>
+    <h1 id="screen-title">EcoSolutions</h1>
+
+    <button class="theme-toggle" onclick="toggleTheme()">
+      Toggle Theme
+    </button>
+  </header>
+
+  <section id="dashboard">
+
+    <h2>Dashboard</h2>
+
+    <p>
+      Points:
+      <strong id="points">120</strong>
+    </p>
+
+    <button class="btn" onclick="redeem(20)">
+      Redeem Reward
+    </button>
+
+    <div class="chart-container">
+      <canvas id="pointsChart"></canvas>
+    </div>
+
+    <div id="feedback"></div>
+
+  </section>
+
+  <script src="app.js"></script>
+
+</body>
+</html>

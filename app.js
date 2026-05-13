@@ -55,8 +55,8 @@ async function fetchAndSyncPoints() {
 }
 
 async function handleRegister() {
-  const email = document.getElementById("reg-email").value;
-  const username = document.getElementById("reg-username").value;
+  const email = document.getElementById("reg-email").value.trim();
+  const username = document.getElementById("reg-username").value.trim();
   const password = document.getElementById("reg-password").value;
   const feedback = document.getElementById("register-feedback");
 
@@ -69,45 +69,61 @@ async function handleRegister() {
   feedback.textContent = "Creating account secure data rows...";
   feedback.style.color = "orange";
 
-  const { data, error } = await supabase.auth.signUp({
-    email: email,
-    password: password,
-    options: {
-      data: { username: username }
-    }
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: { username: username }
+      }
+    });
 
-  if (error) {
-    feedback.textContent = `❌ Error: ${error.message}`;
+    if (error) {
+      feedback.textContent = `❌ Error: ${error.message}`;
+      feedback.style.color = "#d32f2f";
+    } else {
+      feedback.textContent = "✅ Success! Navigating to login panel...";
+      feedback.style.color = "#388e3c";
+      setTimeout(() => navigate("login"), 2000);
+    }
+  } catch (err) {
+    feedback.textContent = `❌ Connection Exception: ${err.message || err}`;
     feedback.style.color = "#d32f2f";
-  } else {
-    feedback.textContent = "✅ Success! Please check email or log in.";
-    feedback.style.color = "#388e3c";
-    setTimeout(() => navigate("login"), 2000);
   }
 }
 
 async function handleLogin() {
-  const emailField = document.getElementById("username").value;
+  const emailField = document.getElementById("username").value.trim();
   const passField = document.getElementById("password").value;
   const feedback = document.getElementById("login-feedback");
+
+  if (!emailField || !passField) {
+    feedback.textContent = "❌ Email and password required.";
+    feedback.style.color = "#d32f2f";
+    return;
+  }
 
   feedback.textContent = "Authenticating identity data...";
   feedback.style.color = "orange";
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: emailField,
-    password: passField
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: emailField,
+      password: passField
+    });
 
-  if (error) {
-    feedback.textContent = `❌ Error: ${error.message}`;
+    if (error) {
+      feedback.textContent = `❌ Error: ${error.message}`;
+      feedback.style.color = "#d32f2f";
+    } else {
+      currentUser = data.user;
+      feedback.textContent = "";
+      await fetchAndSyncPoints();
+      navigate("dashboard");
+    }
+  } catch (err) {
+    feedback.textContent = `❌ Connection Exception: ${err.message || err}`;
     feedback.style.color = "#d32f2f";
-  } else {
-    currentUser = data.user;
-    feedback.textContent = "";
-    await fetchAndSyncPoints();
-    navigate("dashboard");
   }
 }
 

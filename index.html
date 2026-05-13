@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoSolutions App</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Repaired complete Chart.js absolute framework package path -->
-  <script src="jsdelivr.net"></script>
 </head>
-
 <body>
 
   <header id="app-header">
@@ -21,8 +18,8 @@
     <h2>Welcome to EcoSolutions</h2>
     <p>Please log in to manage your points.</p>
     <div class="login-form">
-      <input type="text" id="username" placeholder="Username" value="Jane Doe"><br>
-      <input type="password" id="password" placeholder="Password" value="password"><br>
+      <input type="text" id="username" placeholder="Email Address"><br>
+      <input type="password" id="password" placeholder="Password"><br>
       <button class="btn" onclick="handleLogin()">Login</button>
     </div>
     <div id="login-feedback"></div>
@@ -35,19 +32,14 @@
     
     <div class="chart-box">
       <h3>Your Weekly Points Progress</h3>
-      <div class="chart-container">
-        <canvas id="pointsChart"></canvas>
-      </div>
+      <div class="pure-css-chart" id="weekly-bars"></div>
     </div>
 
     <div class="chart-box" style="margin-top: 24px;">
       <h3>Monthly Recycling Performance (kg)</h3>
-      <div class="chart-container">
-        <canvas id="performanceChart"></canvas>
-      </div>
+      <div class="pure-css-chart" id="monthly-bars"></div>
     </div>
   </section>
-
 
   <!-- 3. Scan View -->
   <section id="scan">
@@ -97,7 +89,7 @@
     <h2>Your Eco Profile</h2>
     <div class="profile-card">
       <div class="avatar-placeholder">🌿</div>
-      <h3>Jane Doe</h3>
+      <h3>User Profile</h3>
       <p>Rank Level: <strong>Eco Hero</strong></p>
       <p>Current Points: <strong class="profile-points-sync">120</strong></p>
       <button class="btn logout-btn" onclick="handleLogout()">Logout Account</button>
@@ -113,6 +105,8 @@
     <button onclick="navigate('profile')">Profile</button>
   </nav>
 
+  <!-- Production JavaScript Module Infrastructure Hooks -->
+  <script src="jsdelivr.net"></script>
   <script src="app.js"></script>
 </body>
 </html>

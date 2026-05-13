@@ -1,41 +1,198 @@
-let chartInstance = null;
-let performanceChartInstance = null;
+const SUPABASE_URL = "supabase.co"; 
+const SUPABASE_ANON_KEY = "your-actual-anon-public-key-here";
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function getSavedPoints() {
-  const stored = localStorage.getItem("eco_points");
-  if (stored === null) {
-    localStorage.setItem("eco_points", "120");
-    return 120;
+let currentUser = null;
+
+async function checkUserSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await fetchAndSyncPoints();
+    navigate("dashboard");
+  } else {
+    navigate("login");
   }
-  return parseInt(stored);
 }
 
-function syncPointsDisplay(pointsValue) {
+async function fetchAndSyncPoints() {
+  if (!currentUser) return 0;
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username, points_balance')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (error) {
+    console.error("Profile Synchronization Error:", error.message);
+    return 0;
+  }
+
   const dashboardPoints = document.getElementById("points");
   const profilePoints = document.querySelector(".profile-points-sync");
+  const profileName = document.getElementById("profile-name-display");
   
-  if (dashboardPoints) dashboardPoints.textContent = pointsValue;
-  if (profilePoints) profilePoints.textContent = pointsValue;
+  if (dashboardPoints) dashboardPoints.textContent = data.points_balance;
+  if (profilePoints) profilePoints.textContent = data.points_balance;
+  if (profileName) profileName.textContent = data.username;
+  
+  return data.points_balance;
 }
 
-function handleLogin() {
-  const userField = document.getElementById("username").value;
+async function handleRegister() {
+  const email = document.getElementById("reg-email").value;
+  const username = document.getElementById("reg-username").value;
+  const password = document.getElementById("reg-password").value;
+  const feedback = document.getElementById("register-feedback");
+
+  if (!email || !username || !password) {
+    feedback.textContent = "❌ Please fill out all configuration fields.";
+    feedback.style.color = "#d32f2f";
+    return;
+  }
+
+  feedback.textContent = "Creating account secure data rows...";
+  feedback.style.color = "orange";
+
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      data: { username: username }
+    }
+  });
+
+  if (error) {
+    feedback.textContent = `❌ Error: ${error.message}`;
+    feedback.style.color = "#d32f2f";
+  } else {
+    feedback.textContent = "✅ Success! Please check email or log in.";
+    feedback.style.color = "#388e3c";
+    setTimeout(() => navigate("login"), 2000);
+  }
+}
+
+async function handleLogin() {
+  const emailField = document.getElementById("username").value;
   const passField = document.getElementById("password").value;
   const feedback = document.getElementById("login-feedback");
 
-  if (userField.trim() !== "" && passField === "password") {
-    localStorage.setItem("is_logged_in", "true");
-    feedback.textContent = "";
-    navigate("dashboard");
+  feedback.textContent = "Authenticating identity data...";
+  feedback.style.color = "orange";
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: emailField,
+    password: passField
+  });
+
+  if (error) {
+    feedback.textContent = `❌ Error: ${error.message}`;
+    feedback.style.color = "#d32f2f";
   } else {
-    feedback.textContent = "❌ Invalid username or password.";
+    currentUser = data.user;
+    feedback.textContent = "";
+    await fetchAndSyncPoints();
+    navigate("dashboard");
+  }
+}
+
+async function handleLogout() {
+  await supabase.auth.signOut();
+  currentUser = null;
+  navigate("login");
+}
+
+async function filterLeaderboard() {
+  const list = document.getElementById("leaderboardList");
+  if (!list) return;
+
+  list.innerHTML = `<li style="justify-content:center; color:var(--text-muted);">Syncing ranking database tables...</li>`;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username, points_balance')
+    .order('points_balance', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    list.innerHTML = `<li style="justify-content:center; color:#d32f2f;">❌ Live leaderboard failed to load.</li>`;
+    return;
+  }
+
+  if (data.length === 0) {
+    list.innerHTML = `<li style="justify-content:center; color:var(--text-muted);">No entries recorded yet.</li>`;
+    return;
+  }
+
+  list.innerHTML = data.map((user, i) => {
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+    const isMe = currentUser && user.username === document.getElementById("profile-name-display").textContent;
+    return `
+      <li style="${isMe ? 'background:rgba(56,142,60,0.1); font-weight:bold; border-radius:8px;' : ''}">
+        <span><strong>${medal}</strong> ${user.username} ${isMe ? '(You)' : ''}</span>
+        <strong>${user.points_balance} pts</strong>
+      </li>
+    `;
+  }).join("");
+}
+
+async function redeem(cost, rewardName) {
+  const feedback = document.getElementById("feedback");
+  if (!currentUser) return;
+
+  const currentPoints = await fetchAndSyncPoints();
+
+  if (currentPoints >= cost) {
+    const newBalance = currentPoints - cost;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ points_balance: newBalance })
+      .eq('id', currentUser.id);
+
+    if (error) {
+      feedback.textContent = `❌ Database update rejection: ${error.message}`;
+      feedback.style.color = "#d32f2f";
+    } else {
+      await fetchAndSyncPoints();
+      feedback.textContent = `✅ ${rewardName} successfully processed!`;
+      feedback.style.color = "#388e3c";
+    }
+  } else {
+    feedback.textContent = "❌ Balance insufficient for transaction criteria.";
     feedback.style.color = "#d32f2f";
   }
 }
 
-function handleLogout() {
-  localStorage.removeItem("is_logged_in");
-  navigate("login");
+async function addMockPoints(amount) {
+  const scanFeedback = document.getElementById("scan-feedback");
+  if (!currentUser) return;
+
+  const currentPoints = await fetchAndSyncPoints();
+  const newBalance = currentPoints + amount;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ points_balance: newBalance })
+    .eq('id', currentUser.id);
+
+  if (error) {
+    scanFeedback.textContent = `❌ Write transactional logic drop: ${error.message}`;
+    scanFeedback.style.color = "#d32f2f";
+  } else {
+    await fetchAndSyncPoints();
+    scanFeedback.textContent = `✅ Ledger adjustment verified! +${amount} points added.`;
+    scanFeedback.style.color = "#388e3c";
+  }
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const currentTheme = root.getAttribute("data-theme");
+  const targetTheme = (currentTheme === "dark") ? "light" : "dark";
+  root.setAttribute("data-theme", targetTheme);
+  localStorage.setItem("theme_preference", targetTheme);
 }
 
 function navigate(sectionId) {
@@ -45,11 +202,15 @@ function navigate(sectionId) {
   if (targetSection) targetSection.classList.add('active');
 
   const titleEl = document.getElementById("screen-title");
-  if (titleEl) titleEl.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+  if (titleEl) {
+    if (sectionId === 'login') titleEl.textContent = "Login";
+    else if (sectionId === 'register') titleEl.textContent = "Register";
+    else titleEl.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+  }
 
   const navBar = document.getElementById("main-nav");
   if (navBar) {
-    navBar.style.display = (sectionId === "login") ? "none" : "flex";
+    navBar.style.display = (sectionId === "login" || sectionId === "register") ? "none" : "flex";
   }
 
   document.querySelectorAll(".bottom-nav button").forEach(btn => {
@@ -59,154 +220,67 @@ function navigate(sectionId) {
     }
   });
 
-  if (document.getElementById("feedback")) document.getElementById("feedback").textContent = "";
-  if (document.getElementById("scan-feedback")) document.getElementById("scan-feedback").textContent = "";
-
   if (sectionId === "leaderboard") filterLeaderboard();
   if (sectionId === "dashboard") renderChart();
 }
 
-function redeem(cost, rewardName) {
-  const feedback = document.getElementById("feedback");
-  let currentPoints = getSavedPoints();
-
-  if (currentPoints >= cost) {
-    currentPoints -= cost;
-    localStorage.setItem("eco_points", currentPoints.toString());
-    syncPointsDisplay(currentPoints);
-    feedback.textContent = `✅ ${rewardName} redeemed successfully!`;
-    feedback.style.color = "#388e3c";
-  } else {
-    feedback.textContent = "❌ Not enough points to redeem this reward.";
-    feedback.style.color = "#d32f2f";
-  }
-}
-
-function addMockPoints(amount) {
-  const scanFeedback = document.getElementById("scan-feedback");
-  let currentPoints = getSavedPoints();
-
-  currentPoints += amount;
-  localStorage.setItem("eco_points", currentPoints.toString());
-  syncPointsDisplay(currentPoints);
-
-  scanFeedback.textContent = `✅ Action Verified! +${amount} points added.`;
-  scanFeedback.style.color = "#388e3c";
-}
-
-function toggleTheme() {
-  const root = document.documentElement;
-  const currentTheme = root.getAttribute("data-theme");
-  const targetTheme = (currentTheme === "dark") ? "light" : "dark";
-  
-  root.setAttribute("data-theme", targetTheme);
-  localStorage.setItem("theme_preference", targetTheme);
-
-  if (document.getElementById("dashboard").classList.contains("active")) {
-    renderChart();
-  }
-}
-
-function filterLeaderboard() {
-  const filter = document.getElementById("leaderboardFilter").value;
-  const list = document.getElementById("leaderboardList");
-  
-  const allData = [
-    { name: "Alice", points: 300 },
-    { name: "Bob", points: 280 },
-    { name: "Charlie", points: 260 },
-    { name: "Diana", points: 240 },
-    { name: "Ethan", points: 220 }
-  ];
-
-  let filteredData = allData;
-  if (filter === "monthly") filteredData = allData.slice(0, 3);
-  if (filter === "weekly") filteredData = allData.slice(0, 2);
-
-  list.innerHTML = filteredData.map((user, i) => {
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
-    return `
-      <li>
-        <span><strong>${medal}</strong> ${user.name}</span>
-        <strong>${user.points} pts</strong>
-      </li>
-    `;
-  }).join("");
-}
-
 function renderChart() {
-  const ctx = document.getElementById("pointsChart");
-  const perfCtx = document.getElementById("performanceChart");
-  if (!ctx || !perfCtx) return;
+  const weeklyContainer = document.getElementById("weekly-bars");
+  const monthlyContainer = document.getElementById("monthly-bars");
+  if (!weeklyContainer || !monthlyContainer) return;
 
-  if (chartInstance) chartInstance.destroy();
-  if (performanceChartInstance) performanceChartInstance.destroy();
+  const weeklyData = [
+    { label: "M", val: 10 }, { label: "T", val: 20 }, { label: "W", val: 15 },
+    { label: "T", val: 25 }, { label: "F", val: 18 }, { label: "S", val: 30 }, 
+    { label: "S", val: 35 }
+  ];
+  const maxWeekly = 35;
 
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-  const labelColor = isDark ? "#adb5bd" : "#6c757d";
-  const gridColor = isDark ? "#2d2d2d" : "#e9ecef";
+  weeklyContainer.innerHTML = weeklyData.map(d => {
+    const heightPercent = (d.val / maxWeekly) * 80;
+    return `
+      <div class="chart-bar-wrapper">
+        <div class="chart-bar-fill" style="height: ${heightPercent}%;">
+          <span class="bar-value">${d.val}</span>
+        </div>
+        <span class="bar-label">${d.label}</span>
+      </div>
+    `;
+  }).join('');
 
-  chartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [{
-        label: "Weekly Points Balance",
-        data: [10, 20, 15, 25, 18, 30, 35],
-        borderColor: isDark ? "#81c784" : "#4CAF50",
-        backgroundColor: isDark ? "rgba(129, 199, 132, 0.1)" : "rgba(76, 175, 80, 0.1)",
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: labelColor } }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: labelColor } },
-        y: { grid: { color: gridColor }, ticks: { color: labelColor } }
-      }
-    }
-  });
+  const monthlyData = [
+    { label: "Jan", val: 45 }, { label: "Feb", val: 55 }, { ...{ label: "Mar", val: 40 } },
+    { label: "Apr", val: 65 }, { label: "May", val: 50 }, { label: "Jun", val: 75 }
+  ];
+  const maxMonthly = 75;
 
-  performanceChartInstance = new Chart(perfCtx, {
-    type: "bar",
-    data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      datasets: [{
-        label: "Recycled Plastic / Glass (kg)",
-        data: [12, 19, 15, 25, 22, 30],
-        backgroundColor: isDark ? "#81c784" : "#388E3C",
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: labelColor } }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: labelColor } },
-        y: { grid: { color: gridColor }, ticks: { color: labelColor }, beginAtZero: true }
-      }
-    }
-  });
+  monthlyContainer.innerHTML = monthlyData.map(d => {
+    const heightPercent = (d.val / maxMonthly) * 80;
+    return `
+      <div class="chart-bar-wrapper">
+        <div class="chart-bar-fill accent-bar" style="height: ${heightPercent}%;">
+          <span class="bar-value">${d.val}</span>
+        </div>
+        <span class="bar-label">${d.label}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 window.onload = () => {
-  syncPointsDisplay(getSavedPoints());
-  
   const savedTheme = localStorage.getItem("theme_preference") || "light";
   document.documentElement.setAttribute("data-theme", savedTheme);
-
-  const isLoggedIn = localStorage.getItem("is_logged_in");
-  if (isLoggedIn === "true") {
-    navigate("dashboard");
-  } else {
-    navigate("login");
-  }
+  
+  checkUserSession();
+  
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      currentUser = session.user;
+      fetchAndSyncPoints();
+      navigate("dashboard");
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      navigate("login");
+    }
+  });
 };

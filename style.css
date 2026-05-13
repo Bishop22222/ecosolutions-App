@@ -53,5 +53,28 @@ section {
 }
 #feedback {
   margin-top: 15px;
+  font-weight.login-form {
+  margin-top: 15px;
+}
+.login-form input {
+  width: 100%;
+  max-width: 280px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+#login-feedback {
+  margin-top: 10px;
   font-weight: bold;
+}
+.logout-btn {
+  background-color: #d32f2f;
+  margin-top: 15px;
+}
+.logout-btn:hover {
+  background-color: #b71c1c;
+}
+: bold;
 }

@@ -1,8 +1,7 @@
-const SUPABASE_URL = "supabase.co"; 
-const SUPABASE_ANON_KEY = "your-actual-anon-public-key-here";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co/rest/v1/"; 
+const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
 
-let currentUser = null;
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function checkUserSession() {
   const { data: { session } } = await supabase.auth.getSession();

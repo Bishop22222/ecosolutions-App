@@ -1,4 +1,5 @@
 let chartInstance = null;
+let performanceChartInstance = null;
 
 function getSavedPoints() {
   const stored = localStorage.getItem("eco_points");
@@ -135,11 +136,11 @@ function filterLeaderboard() {
 
 function renderChart() {
   const ctx = document.getElementById("pointsChart");
-  if (!ctx) return;
+  const perfCtx = document.getElementById("performanceChart");
+  if (!ctx || !perfCtx) return;
 
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
+  if (chartInstance) chartInstance.destroy();
+  if (performanceChartInstance) performanceChartInstance.destroy();
 
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   const labelColor = isDark ? "#adb5bd" : "#6c757d";
@@ -167,6 +168,30 @@ function renderChart() {
       scales: {
         x: { grid: { color: gridColor }, ticks: { color: labelColor } },
         y: { grid: { color: gridColor }, ticks: { color: labelColor } }
+      }
+    }
+  });
+
+  performanceChartInstance = new Chart(perfCtx, {
+    type: "bar",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [{
+        label: "Recycled Plastic / Glass (kg)",
+        data: [12, 19, 15, 25, 22, 30],
+        backgroundColor: isDark ? "#81c784" : "#388E3C",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: labelColor } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: labelColor } },
+        y: { grid: { color: gridColor }, ticks: { color: labelColor }, beginAtZero: true }
       }
     }
   });

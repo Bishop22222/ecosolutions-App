@@ -1,7 +1,8 @@
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co/rest/v1/"; 
 const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
-
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
 
 async function checkUserSession() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -139,7 +140,8 @@ async function filterLeaderboard() {
 
   list.innerHTML = data.map((user, i) => {
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
-    const isMe = currentUser && user.username === document.getElementById("profile-name-display").textContent;
+    const profileDisplayEl = document.getElementById("profile-name-display");
+    const isMe = currentUser && profileDisplayEl && user.username === profileDisplayEl.textContent;
     return `
       <li style="${isMe ? 'background:rgba(56,142,60,0.1); font-weight:bold; border-radius:8px;' : ''}">
         <span><strong>${medal}</strong> ${user.username} ${isMe ? '(You)' : ''}</span>
@@ -261,7 +263,7 @@ function renderChart() {
   }).join('');
 
   const monthlyData = [
-    { label: "Jan", val: 45 }, { label: "Feb", val: 55 }, { ...{ label: "Mar", val: 40 } },
+    { label: "Jan", val: 45 }, { label: "Feb", val: 55 }, { label: "Mar", val: 40 },
     { label: "Apr", val: 65 }, { label: "May", val: 50 }, { label: "Jun", val: 75 }
   ];
   const maxMonthly = 75;

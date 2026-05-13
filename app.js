@@ -18,14 +18,12 @@ async function checkUserSession() {
 async function fetchAndSyncPoints() {
   if (!currentUser) return 0;
   
-  // 1. Attempt to fetch profile row from Supabase
   let { data, error } = await supabase
     .from('profiles')
     .select('username, points_balance')
     .eq('id', currentUser.id)
-    .maybeSingle(); // Prevents throwing hard exceptions if empty
+    .maybeSingle();
 
-  // 2. If row is missing ("no rows retained"), dynamically insert it now
   if (!data) {
     const fallbackUsername = currentUser.user_metadata?.username || currentUser.email.split('@')[0];
     
@@ -41,21 +39,8 @@ async function fetchAndSyncPoints() {
       console.error("Critical Profile Creation Recovery Failure:", insertError.message);
       return 0;
     }
-    data = newProfile; // Assign newly generated database structure context
+    data = newProfile; 
   }
-
-  // 3. Keep layout synchronized cleanly
-  const dashboardPoints = document.getElementById("points");
-  const profilePoints = document.querySelector(".profile-points-sync");
-  const profileName = document.getElementById("profile-name-display");
-  
-  if (dashboardPoints) dashboardPoints.textContent = data.points_balance;
-  if (profilePoints) profilePoints.textContent = data.points_balance;
-  if (profileName) profileName.textContent = data.username;
-  
-  return data.points_balance;
-}
-
 
   const dashboardPoints = document.getElementById("points");
   const profilePoints = document.querySelector(".profile-points-sync");

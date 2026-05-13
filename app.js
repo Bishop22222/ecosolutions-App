@@ -1,6 +1,7 @@
-const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co/rest/v1/"; 
+const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 

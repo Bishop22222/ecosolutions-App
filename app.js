@@ -1,9 +1,11 @@
+import { createClient } from '@supabase/supabase-js';
+
 const SUPABASE_URL = "supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;
+let currentUser = null;   
 
 async function checkUserSession() {
   const { data: { session } } = await supabase.auth.getSession();

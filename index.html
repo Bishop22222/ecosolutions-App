@@ -3,60 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval' *; connect-src * 'unsafe-inline' 'unsafe-eval' *;">
   <title>EcoSolutions App</title>
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; script-src * 'unsafe-inline' 'unsafe-eval'">
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<header id="app-header">
+<header>
   <h1 id="screen-title">Login</h1>
-  <button class="theme-toggle"
-    onclick="if(window.toggleTheme){window.toggleTheme()}">
-    Toggle Theme
-  </button>
+  <button onclick="toggleTheme()">Theme</button>
 </header>
 
 <!-- LOGIN -->
 <section id="login" class="active">
-  <h2>Welcome to EcoSolutions</h2>
-  <p>Please log in to manage your points.</p>
+  <h2>Login</h2>
 
-  <div class="login-form">
-    <input type="email" id="email" placeholder="Email Address"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
 
-    <button class="btn" onclick="handleLogin()">Login</button>
-  </div>
-
-  <p style="text-align:center; font-size:14px; margin-top:15px;">
-    Don't have an account?
-    <a href="#" onclick="navigate('register')" style="color:var(--accent-color); font-weight:bold;">
-      Sign Up Here
-    </a>
-  </p>
+  <button onclick="handleLogin()">Login</button>
 
   <div id="login-feedback"></div>
 </section>
 
 <!-- REGISTER -->
 <section id="register">
-  <h2>Create Eco Account</h2>
+  <h2>Register</h2>
 
-  <div class="login-form">
-    <input type="email" id="reg-email" placeholder="Email Address"><br>
-    <input type="text" id="reg-username" placeholder="Username"><br>
-    <input type="password" id="reg-password" placeholder="Password"><br>
+  <input type="email" id="reg-email" placeholder="Email">
+  <input type="text" id="reg-username" placeholder="Username">
+  <input type="password" id="reg-password" placeholder="Password">
 
-    <button class="btn" onclick="handleRegister()">Register Account</button>
-  </div>
-
-  <p style="text-align:center; font-size:14px; margin-top:15px;">
-    Already have an account?
-    <a href="#" onclick="navigate('login')" style="color:var(--accent-color); font-weight:bold;">
-      Login Here
-    </a>
-  </p>
+  <button onclick="handleRegister()">Register</button>
 
   <div id="register-feedback"></div>
 </section>
@@ -64,51 +46,21 @@
 <!-- DASHBOARD -->
 <section id="dashboard">
   <h2>Dashboard</h2>
-  <p>Available Balance: <strong id="points">0</strong> pts</p>
-</section>
-
-<!-- SCAN -->
-<section id="scan">
-  <h2>Scan or Upload</h2>
-
-  <button class="btn" onclick="addMockPoints(25)">Upload Photo (+25 pts)</button>
-  <button class="btn" onclick="addMockPoints(15)">Scan QR (+15 pts)</button>
-
-  <div id="scan-feedback"></div>
-</section>
-
-<!-- REWARDS -->
-<section id="rewards">
-  <h2>Rewards</h2>
-
-  <button class="btn" onclick="redeem(20,'Data')">Redeem Data</button>
-  <button class="btn" onclick="redeem(15,'Airtime')">Redeem Airtime</button>
-
-  <div id="feedback"></div>
-</section>
-
-<!-- LEADERBOARD -->
-<section id="leaderboard">
-  <h2>Leaderboard</h2>
-  <ol id="leaderboardList"></ol>
+  <p>Points: <span id="points">0</span></p>
 </section>
 
 <!-- PROFILE -->
 <section id="profile">
   <h2>Profile</h2>
-
   <h3 id="profile-name-display">Loading...</h3>
   <p>Points: <span class="profile-points-sync">0</span></p>
 
-  <button class="btn" onclick="handleLogout()">Logout</button>
+  <button onclick="handleLogout()">Logout</button>
 </section>
 
 <!-- NAV -->
-<nav class="bottom-nav" id="main-nav" style="display:none;">
+<nav id="main-nav" style="display:none;">
   <button onclick="navigate('dashboard')">Home</button>
-  <button onclick="navigate('scan')">Scan</button>
-  <button onclick="navigate('rewards')">Rewards</button>
-  <button onclick="navigate('leaderboard')">Leaders</button>
   <button onclick="navigate('profile')">Profile</button>
 </nav>
 

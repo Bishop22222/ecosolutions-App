@@ -3,70 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'unsafe-inline' 'unsafe-eval';
+                 script-src * 'unsafe-inline' 'unsafe-eval';
+                 connect-src * 'unsafe-inline' 'unsafe-eval';
+                 style-src * 'unsafe-inline';
+                 font-src *;">
+
   <title>EcoSolutions App</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header>
+<header id="app-header">
   <h1 id="screen-title">Login</h1>
-  <button onclick="toggleTheme()">Theme</button>
+
+  <button class="theme-toggle"
+    onclick="if(window.toggleTheme) window.toggleTheme()">
+    Toggle Theme
+  </button>
 </header>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <section id="login" class="active">
-  <h2>Login</h2>
+  <h2>Welcome to EcoSolutions</h2>
+  <p>Please log in to manage your points.</p>
 
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
+  <div class="login-form">
 
-  <button class="btn" onclick="handleLogin()">Login</button>
+    <!-- FIX: MUST be email input used by JS -->
+    <input type="text" id="username" placeholder="Email Address"><br>
 
-  <p onclick="navigate('register')" style="cursor:pointer;color:green;">
-    Create account
+    <input type="password" id="password" placeholder="Password"><br>
+
+    <button class="btn"
+      onclick="if(window.handleLogin) window.handleLogin()">
+      Login
+    </button>
+  </div>
+
+  <p style="text-align:center; font-size:14px; margin-top:15px;">
+    Don't have an account?
+    <a href="#" onclick="if(window.navigate) window.navigate('register')">
+      Sign Up Here
+    </a>
   </p>
 
   <div id="login-feedback"></div>
 </section>
 
-<!-- REGISTER -->
+<!-- ================= REGISTER ================= -->
 <section id="register">
-  <h2>Register</h2>
+  <h2>Create Eco Account</h2>
 
-  <input type="email" id="reg-email" placeholder="Email">
-  <input type="text" id="reg-username" placeholder="Username">
-  <input type="password" id="reg-password" placeholder="Password">
+  <div class="login-form">
+    <input type="text" id="reg-email" placeholder="Email Address"><br>
+    <input type="text" id="reg-username" placeholder="Username"><br>
+    <input type="password" id="reg-password" placeholder="Password"><br>
 
-  <button class="btn" onclick="handleRegister()">Register Account</button>
+    <button class="btn"
+      onclick="if(window.handleRegister) window.handleRegister()">
+      Register Account
+    </button>
+  </div>
 
-  <p onclick="navigate('login')" style="cursor:pointer;color:green;">
-    Back to login
+  <p style="text-align:center; font-size:14px; margin-top:15px;">
+    Already have an account?
+    <a href="#" onclick="if(window.navigate) window.navigate('login')">
+      Login Here
+    </a>
   </p>
 
   <div id="register-feedback"></div>
 </section>
 
-<!-- DASHBOARD -->
+<!-- ================= DASHBOARD ================= -->
 <section id="dashboard">
   <h2>Dashboard</h2>
-  <p>Points: <span id="points">0</span></p>
+  <p>Available Balance: <strong id="points">0</strong> pts</p>
+
+  <div class="chart-box">
+    <h3>Your Weekly Points Progress</h3>
+    <div class="pure-css-chart" id="weekly-bars"></div>
+  </div>
+
+  <div class="chart-box" style="margin-top: 24px;">
+    <h3>Monthly Recycling Performance (kg)</h3>
+    <div class="pure-css-chart" id="monthly-bars"></div>
+  </div>
 </section>
 
-<!-- PROFILE -->
+<!-- ================= SCAN ================= -->
+<section id="scan">
+  <h2>Scan or Upload</h2>
+
+  <div class="camera-simulation">
+    <p>[ Camera View Simulation Active ]</p>
+  </div>
+
+  <button class="btn" onclick="window.addMockPoints(25)">
+    Upload Photo (+25 pts)
+  </button>
+
+  <button class="btn" onclick="window.addMockPoints(15)">
+    Scan QR Code (+15 pts)
+  </button>
+
+  <div id="scan-feedback"></div>
+</section>
+
+<!-- ================= REWARDS ================= -->
+<section id="rewards">
+  <h2>Available Rewards</h2>
+
+  <div class="reward-card">
+    <p><strong>100MB Mobile Data Bundle</strong></p>
+    <button class="btn" onclick="window.redeem(20, '100MB Data')">
+      Redeem (20 pts)
+    </button>
+  </div>
+
+  <div class="reward-card">
+    <p><strong>5 Minutes Network Airtime</strong></p>
+    <button class="btn" onclick="window.redeem(15, '5 Mins Airtime')">
+      Redeem (15 pts)
+    </button>
+  </div>
+
+  <div class="reward-card">
+    <p><strong>Local Store Shopping Voucher</strong></p>
+    <button class="btn" onclick="window.redeem(25, 'Shopping Voucher')">
+      Redeem (25 pts)
+    </button>
+  </div>
+
+  <div id="feedback"></div>
+</section>
+
+<!-- ================= LEADERBOARD ================= -->
+<section id="leaderboard">
+  <h2>Top Recyclers</h2>
+
+  <ol id="leaderboardList"></ol>
+</section>
+
+<!-- ================= PROFILE ================= -->
 <section id="profile">
-  <h2>Profile</h2>
+  <h2>Your Eco Profile</h2>
 
-  <h3 id="profile-name-display">Loading...</h3>
-  <p>Points: <span class="profile-points-sync">0</span></p>
+  <div class="profile-card">
+    <div class="avatar-placeholder">🌿</div>
 
-  <button onclick="handleLogout()">Logout</button>
+    <h3 id="profile-name-display">Loading User...</h3>
+
+    <p>Rank Level: <strong>Eco Hero</strong></p>
+
+    <p>Current Points: <strong class="profile-points-sync">0</strong></p>
+
+    <button class="btn logout-btn" onclick="window.handleLogout()">
+      Logout Account
+    </button>
+  </div>
 </section>
 
-<!-- NAV -->
-<nav id="main-nav" style="display:none;">
-  <button onclick="navigate('dashboard')">Home</button>
-  <button onclick="navigate('profile')">Profile</button>
+<!-- ================= NAV ================= -->
+<nav class="bottom-nav" id="main-nav" style="display:none;">
+  <button onclick="window.navigate('dashboard')">Home</button>
+  <button onclick="window.navigate('scan')">Scan</button>
+  <button onclick="window.navigate('rewards')">Rewards</button>
+  <button onclick="window.navigate('leaderboard')">Leaders</button>
+  <button onclick="window.navigate('profile')">Profile</button>
 </nav>
 
 <script type="module" src="app.js"></script>

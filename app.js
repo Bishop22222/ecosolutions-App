@@ -108,12 +108,18 @@ async function handleRegister() {
 
 /* LOGIN */
 async function handleLogin() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const emailEl = document.getElementById("email");
+  const passEl = document.getElementById("password");
+
+  const email = emailEl?.value?.trim();
+  const password = passEl?.value;
+
+  console.log("LOGIN DEBUG:", { email, password });
+
   const feedback = document.getElementById("login-feedback");
 
   if (!email || !password) {
-    feedback.textContent = "❌ Enter email + password";
+    feedback.textContent = "❌ Missing email or password";
     return;
   }
 
@@ -122,13 +128,14 @@ async function handleLogin() {
     password
   });
 
+  console.log("SUPABASE LOGIN RESULT:", { data, error });
+
   if (error) {
     feedback.textContent = error.message;
     return;
   }
 
   currentUser = data.user;
-
   await fetchAndSyncPoints();
   navigate("dashboard");
 }

@@ -1,7 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I";
+const supabase = createClient(
+  "https://jrcifafkepnwfixllesj.supabase.co",
+  "YOUR_ANON_KEY"
+);
 
 let currentUser = null;
 
@@ -26,7 +28,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-/* LISTENER (keeps login stable) */
+/* LISTENER */
 supabase.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
 
@@ -40,15 +42,15 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
 /* LOGIN */
 async function handleLogin() {
-  const email = document.getElementById("email")?.value.trim().toLowerCase();
-  const password = document.getElementById("password")?.value;
-
-  const feedback = document.getElementById("login-feedback");
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
+
+  const feedback = document.getElementById("login-feedback");
 
   if (error) {
     feedback.textContent = error.message;
@@ -62,27 +64,27 @@ async function handleLogin() {
 
 /* REGISTER */
 async function handleRegister() {
-  const email = document.getElementById("reg-email")?.value.trim().toLowerCase();
-  const username = document.getElementById("reg-username")?.value.trim();
-  const password = document.getElementById("reg-password")?.value;
+  const email = document.getElementById("reg-email").value.trim().toLowerCase();
+  const username = document.getElementById("reg-username").value.trim();
+  const password = document.getElementById("reg-password").value;
 
-  const feedback = document.getElementById("register-feedback");
-
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { username } }
   });
+
+  const feedback = document.getElementById("register-feedback");
 
   if (error) {
     feedback.textContent = error.message;
     return;
   }
 
-  feedback.textContent = "Account created. You can now log in.";
+  feedback.textContent = "Account created. Now login.";
 }
 
-/* PROFILE */
+/* PROFILE SYNC */
 async function syncProfile() {
   if (!currentUser) return;
 
@@ -93,15 +95,11 @@ async function syncProfile() {
     .maybeSingle();
 
   if (!data) {
-    const username =
-      currentUser.user_metadata?.username ||
-      currentUser.email.split("@")[0];
-
     const { data: newProfile } = await supabase
       .from("profiles")
       .insert({
         id: currentUser.id,
-        username,
+        username: currentUser.email.split("@")[0],
         points_balance: 100
       })
       .select()
@@ -126,19 +124,17 @@ async function handleLogout() {
 }
 
 /* NAV */
-function navigate(id) {
+function navigate(page) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  document.getElementById(id)?.classList.add("active");
+  document.getElementById(page).classList.add("active");
 
-  document.getElementById("screen-title").textContent = id;
+  document.getElementById("screen-title").textContent = page;
 
   document.getElementById("main-nav").style.display =
-    id === "login" || id === "register" ? "none" : "flex";
+    page === "login" || page === "register" ? "none" : "flex";
 }
 
 /* THEME */
 function toggleTheme() {
-  const root = document.documentElement;
-  const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  root.setAttribute("data-theme", next);
+  document.body.classList.toggle("dark");
 }

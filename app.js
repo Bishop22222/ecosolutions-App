@@ -1,14 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'https://jsdelivr.net';
 
-// 1. FIXED: Corrected the format of the Supabase project URL
-const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co/rest/v1/"; 
+const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;   
 
-// Hook up your buttons to the window context so HTML inline clicks find them
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;
@@ -17,7 +15,6 @@ window.navigate = navigate;
 window.redeem = redeem;
 window.addMockPoints = addMockPoints;
 
-// Run session check on window load
 window.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem("theme_preference") || "light";
   document.documentElement.setAttribute("data-theme", savedTheme);
@@ -25,12 +22,16 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function checkUserSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    await fetchAndSyncPoints();
-    navigate("dashboard");
-  } else {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await fetchAndSyncPoints();
+      navigate("dashboard");
+    } else {
+      navigate("login");
+    }
+  } catch (e) {
     navigate("login");
   }
 }
@@ -122,7 +123,6 @@ async function handleRegister() {
 }
 
 async function handleLogin() {
-  // 2. FIXED: Changed from "username" to "reg-email" or your physical login page input element ID
   const emailInput = document.getElementById("username") || document.getElementById("email");
   const emailField = emailInput ? emailInput.value.trim() : "";
   const passField = document.getElementById("password") ? document.getElementById("password").value : "";
@@ -258,7 +258,7 @@ async function addMockPoints(amount) {
       scanFeedback.textContent = `❌ Write transactional logic drop: ${error.message}`;
       scanFeedback.style.color = "#d32f2f";
     }
-   } else {
+  } else {
     await fetchAndSyncPoints();
     if (scanFeedback) {
       scanFeedback.textContent = `✅ Ledger adjustment verified! +${amount} points added.`;
@@ -269,7 +269,7 @@ async function addMockPoints(amount) {
 
 function toggleTheme() {
   const root = document.documentElement;
-  const currentTheme = root.getAttribute("data-theme");
+  const currentTheme = root.getAttribute("data-theme") || "light";
   const targetTheme = (currentTheme === "dark") ? "light" : "dark";
   root.setAttribute("data-theme", targetTheme);
   localStorage.setItem("theme_preference", targetTheme);
@@ -302,4 +302,3 @@ function navigate(sectionId) {
 
   if (sectionId === "leaderboard") filterLeaderboard();
 }
-

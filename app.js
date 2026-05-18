@@ -1,20 +1,18 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const supabase = createClient(
-  "https://jrcifafkepnwfixllesj.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I"
-);
+const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 
-/* expose */
+/* expose existing functions (DO NOT remove your UI) */
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;
-window.navigate = navigate;
-window.toggleTheme = toggleTheme;
 
-/* INIT SESSION */
+/* FIXED SESSION BOOT */
 window.addEventListener("DOMContentLoaded", async () => {
   const { data } = await supabase.auth.getSession();
 
@@ -28,7 +26,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-/* LISTENER */
+/* KEEP SESSION LIVE */
 supabase.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
 
@@ -40,20 +38,34 @@ supabase.auth.onAuthStateChange((_event, session) => {
   }
 });
 
-/* LOGIN */
+/* =========================
+   🔑 LOGIN (FIXED)
+========================= */
 async function handleLogin() {
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const password = document.getElementById("password").value;
+  // supports BOTH of your previous input styles safely
+  const email =
+    (document.getElementById("email")?.value ||
+     document.getElementById("username")?.value || "")
+    .trim()
+    .toLowerCase();
+
+  const password = document.getElementById("password")?.value;
+
+  const feedback = document.getElementById("login-feedback");
+
+  if (!email || !password) {
+    feedback.textContent = "❌ Email and password required";
+    return;
+  }
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  const feedback = document.getElementById("login-feedback");
-
   if (error) {
-    feedback.textContent = error.message;
+    console.log("LOGIN ERROR:", error.message);
+    feedback.textContent = "❌ " + error.message;
     return;
   }
 
@@ -62,29 +74,41 @@ async function handleLogin() {
   navigate("dashboard");
 }
 
-/* REGISTER */
+/* =========================
+   🧾 REGISTER (FIXED)
+========================= */
 async function handleRegister() {
-  const email = document.getElementById("reg-email").value.trim().toLowerCase();
-  const username = document.getElementById("reg-username").value.trim();
-  const password = document.getElementById("reg-password").value;
-
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { username } }
-  });
+  const email = document.getElementById("reg-email")?.value.trim().toLowerCase();
+  const username = document.getElementById("reg-username")?.value.trim();
+  const password = document.getElementById("reg-password")?.value;
 
   const feedback = document.getElementById("register-feedback");
 
-  if (error) {
-    feedback.textContent = error.message;
+  if (!email || !username || !password) {
+    feedback.textContent = "❌ Fill all fields";
     return;
   }
 
-  feedback.textContent = "Account created. Now login.";
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username }
+    }
+  });
+
+  if (error) {
+    feedback.textContent = "❌ " + error.message;
+    return;
+  }
+
+  // IMPORTANT: no auto-login assumption
+  feedback.textContent = "✅ Account created. You can now log in.";
 }
 
-/* PROFILE SYNC */
+/* =========================
+   👤 PROFILE SYNC (SAFE)
+========================= */
 async function syncProfile() {
   if (!currentUser) return;
 
@@ -95,11 +119,15 @@ async function syncProfile() {
     .maybeSingle();
 
   if (!data) {
+    const username =
+      currentUser.user_metadata?.username ||
+      currentUser.email.split("@")[0];
+
     const { data: newProfile } = await supabase
       .from("profiles")
       .insert({
         id: currentUser.id,
-        username: currentUser.email.split("@")[0],
+        username,
         points_balance: 100
       })
       .select()
@@ -116,25 +144,11 @@ async function syncProfile() {
     data.username;
 }
 
-/* LOGOUT */
+/* =========================
+   🚪 LOGOUT
+========================= */
 async function handleLogout() {
   await supabase.auth.signOut();
   currentUser = null;
   navigate("login");
-}
-
-/* NAV */
-function navigate(page) {
-  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
-
-  document.getElementById("screen-title").textContent = page;
-
-  document.getElementById("main-nav").style.display =
-    page === "login" || page === "register" ? "none" : "flex";
-}
-
-/* THEME */
-function toggleTheme() {
-  document.body.classList.toggle("dark");
 }

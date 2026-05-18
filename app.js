@@ -1,6 +1,6 @@
 import { createClient } from 'https://jsdelivr.net';
 
-const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co"; 
+const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -23,15 +23,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function checkUserSession() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      currentUser = session.user;
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    
+    if (data && data.session) {
+      currentUser = data.session.user;
       await fetchAndSyncPoints();
       navigate("dashboard");
     } else {
       navigate("login");
     }
   } catch (e) {
+    console.error("Routing error bypassed safely:", e);
     navigate("login");
   }
 }
@@ -39,39 +42,44 @@ async function checkUserSession() {
 async function fetchAndSyncPoints() {
   if (!currentUser) return 0;
   
-  let { data, error } = await supabase
-    .from('profiles')
-    .select('username, points_balance')
-    .eq('id', currentUser.id)
-    .maybeSingle();
-
-  if (!data) {
-    const fallbackUsername = currentUser.user_metadata?.username || currentUser.email.split('@')[0];
-    
-    const { data: newProfile, error: insertError } = await supabase
+  try {
+    let { data, error } = await supabase
       .from('profiles')
-      .insert([
-        { id: currentUser.id, username: fallbackUsername, points_balance: 120 }
-      ])
       .select('username, points_balance')
-      .single();
+      .eq('id', currentUser.id)
+      .maybeSingle();
 
-    if (insertError) {
-      console.error("Critical Profile Creation Recovery Failure:", insertError.message);
-      return 0;
+    if (error) throw error;
+
+    if (!data) {
+      const emailParts = currentUser.email ? currentUser.email.split('@')[0] : "user";
+      const fallbackUsername = currentUser.user_metadata?.username || emailParts;
+      
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert([
+          { id: currentUser.id, username: fallbackUsername, points_balance: 120 }
+        ])
+        .select('username, points_balance')
+        .single();
+
+      if (insertError) throw insertError;
+      data = newProfile; 
     }
-    data = newProfile; 
-  }
 
-  const dashboardPoints = document.getElementById("points");
-  const profilePoints = document.querySelector(".profile-points-sync");
-  const profileName = document.getElementById("profile-name-display");
-  
-  if (dashboardPoints) dashboardPoints.textContent = data.points_balance;
-  if (profilePoints) profilePoints.textContent = data.points_balance;
-  if (profileName) profileName.textContent = data.username;
-  
-  return data.points_balance;
+    const dashboardPoints = document.getElementById("points");
+    const profilePoints = document.querySelector(".profile-points-sync");
+    const profileName = document.getElementById("profile-name-display");
+    
+    if (dashboardPoints) dashboardPoints.textContent = data.points_balance;
+    if (profilePoints) profilePoints.textContent = data.points_balance;
+    if (profileName) profileName.textContent = data.username;
+    
+    return data.points_balance;
+  } catch (err) {
+    console.error("Points ledger synchronization failure:", err.message);
+    return 0;
+  }
 }
 
 async function handleRegister() {
@@ -123,9 +131,8 @@ async function handleRegister() {
 }
 
 async function handleLogin() {
-  const emailInput = document.getElementById("username") || document.getElementById("email");
-  const emailField = emailInput ? emailInput.value.trim() : "";
-  const passField = document.getElementById("password") ? document.getElementById("password").value : "";
+  const emailField = document.getElementById("username").value.trim();
+  const passField = document.getElementById("password").value;
   const feedback = document.getElementById("login-feedback");
 
   if (!emailField || !passField) {

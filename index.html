@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoSolutions App</title>
-
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; script-src * 'unsafe-inline' 'unsafe-eval'">
-
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -25,7 +21,11 @@
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Password">
 
-  <button onclick="handleLogin()">Login</button>
+  <button class="btn" onclick="handleLogin()">Login</button>
+
+  <p onclick="navigate('register')" style="cursor:pointer;color:green;">
+    Create account
+  </p>
 
   <div id="login-feedback"></div>
 </section>
@@ -38,7 +38,11 @@
   <input type="text" id="reg-username" placeholder="Username">
   <input type="password" id="reg-password" placeholder="Password">
 
-  <button onclick="handleRegister()">Register</button>
+  <button class="btn" onclick="handleRegister()">Register Account</button>
+
+  <p onclick="navigate('login')" style="cursor:pointer;color:green;">
+    Back to login
+  </p>
 
   <div id="register-feedback"></div>
 </section>
@@ -52,6 +56,7 @@
 <!-- PROFILE -->
 <section id="profile">
   <h2>Profile</h2>
+
   <h3 id="profile-name-display">Loading...</h3>
   <p>Points: <span class="profile-points-sync">0</span></p>
 

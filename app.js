@@ -258,7 +258,7 @@ async function addMockPoints(amount) {
       scanFeedback.textContent = `❌ Write transactional logic drop: ${error.message}`;
       scanFeedback.style.color = "#d32f2f";
     }
-  } else {
+   } else {
     await fetchAndSyncPoints();
     if (scanFeedback) {
       scanFeedback.textContent = `✅ Ledger adjustment verified! +${amount} points added.`;
@@ -275,7 +275,6 @@ function toggleTheme() {
   localStorage.setItem("theme_preference", targetTheme);
 }
 
-// 3. FIXED: Completed the broken layout sentence at the bottom cleanly
 function navigate(sectionId) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
   
@@ -303,3 +302,4 @@ function navigate(sectionId) {
 
   if (sectionId === "leaderboard") filterLeaderboard();
 }
+

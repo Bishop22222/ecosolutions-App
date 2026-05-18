@@ -1,11 +1,11 @@
-import { createClient } from 'https://jsdelivr.net';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co"; 
-const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
+const SUPABASE_ANON_KEY = "YOUR_NEW_KEY";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null;   
+let currentUser = null;
 
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
@@ -14,6 +14,7 @@ window.toggleTheme = toggleTheme;
 window.navigate = navigate;
 window.redeem = redeem;
 window.addMockPoints = addMockPoints;
+window.filterLeaderboard = filterLeaderboard;
 
 window.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem("theme_preference") || "light";

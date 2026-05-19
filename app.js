@@ -1,13 +1,13 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I"; // MUST be real anon key
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqPZIdzZKF6TA4lcLSnDoJhfh5I";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 
-/* expose to UI */
+/* expose */
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;
@@ -32,7 +32,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     navigate("login");
   }
 
-  /* IMPORTANT: listen auth changes */
   supabase.auth.onAuthStateChange((_event, session) => {
     currentUser = session?.user || null;
 
@@ -45,17 +44,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-/* ===================== AUTH ===================== */
+/* ================= AUTH ================= */
 
 async function handleRegister() {
-  const email = document.getElementById("reg-email").value.trim();
-  const username = document.getElementById("reg-username").value.trim();
-  const password = document.getElementById("reg-password").value;
+  const email = document.getElementById("reg-email")?.value?.trim();
+  const username = document.getElementById("reg-username")?.value?.trim();
+  const password = document.getElementById("reg-password")?.value;
 
   const feedback = document.getElementById("register-feedback");
 
   if (!email || !username || !password) {
-    feedback.textContent = "❌ Fill all fields";
+    if (feedback) feedback.textContent = "❌ Fill all fields";
     return;
   }
 
@@ -68,22 +67,25 @@ async function handleRegister() {
   });
 
   if (error) {
-    feedback.textContent = "❌ " + error.message;
+    if (feedback) feedback.textContent = "❌ " + error.message;
     return;
   }
 
-  feedback.textContent = "✅ Account created. You can now log in.";
+  if (feedback) feedback.textContent = "✅ Account created. You can now log in.";
   setTimeout(() => navigate("login"), 1200);
 }
 
 async function handleLogin() {
-  const email = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
+  const email =
+    document.getElementById("username")?.value?.trim() ||
+    document.getElementById("reg-email")?.value?.trim();
+
+  const password = document.getElementById("password")?.value;
 
   const feedback = document.getElementById("login-feedback");
 
   if (!email || !password) {
-    feedback.textContent = "❌ Missing email or password";
+    if (feedback) feedback.textContent = "❌ Missing email or password";
     return;
   }
 
@@ -93,7 +95,7 @@ async function handleLogin() {
   });
 
   if (error) {
-    feedback.textContent = "❌ " + error.message;
+    if (feedback) feedback.textContent = "❌ " + error.message;
     return;
   }
 
@@ -108,45 +110,31 @@ async function handleLogout() {
   navigate("login");
 }
 
-/* ===================== PROFILE ===================== */
+/* ================= PROFILE (CLEAN - NO INSERTS) ================= */
 
 async function fetchAndSyncPoints() {
   if (!currentUser) return 0;
 
-  let { data } = await supabase
+  const { data } = await supabase
     .from("profiles")
     .select("username, points_balance")
     .eq("id", currentUser.id)
     .maybeSingle();
 
   if (!data) {
-    const username =
-      currentUser.user_metadata?.username ||
-      currentUser.email.split("@")[0];
-
-    const { data: newProfile } = await supabase
-      .from("profiles")
-      .insert({
-        id: currentUser.id,
-        username,
-        points_balance: 120
-      })
-      .select()
-      .single();
-
-    data = newProfile;
+    // IMPORTANT:
+    // profile creation is now handled by DB trigger
+    return 0;
   }
 
-  if (data) {
-    document.getElementById("points").textContent = data.points_balance;
-    document.querySelector(".profile-points-sync").textContent = data.points_balance;
-    document.getElementById("profile-name-display").textContent = data.username;
-  }
+  document.getElementById("points").textContent = data.points_balance ?? 0;
+  document.querySelector(".profile-points-sync").textContent = data.points_balance ?? 0;
+  document.getElementById("profile-name-display").textContent = data.username ?? "User";
 
-  return data?.points_balance || 0;
+  return data.points_balance ?? 0;
 }
 
-/* ===================== POINTS ===================== */
+/* ================= POINTS (SAFE VERSION) ================= */
 
 async function addPoints(amount) {
   if (!currentUser) return;
@@ -155,7 +143,7 @@ async function addPoints(amount) {
 
   await supabase
     .from("profiles")
-    .update({ points_balance: current + amount })
+    .update({ points_balance: (current || 0) + amount })
     .eq("id", currentUser.id);
 
   fetchAndSyncPoints();
@@ -164,17 +152,17 @@ async function addPoints(amount) {
 async function addMockPoints(amount) {
   const el = document.getElementById("scan-feedback");
   await addPoints(amount);
-  el.textContent = `+${amount} points added`;
+  if (el) el.textContent = `+${amount} points added`;
 }
 
-/* ===================== REDEEM ===================== */
+/* ================= REDEEM ================= */
 
 async function redeem(cost, rewardName) {
   const feedback = document.getElementById("feedback");
   const current = await fetchAndSyncPoints();
 
-  if (current < cost) {
-    feedback.textContent = "❌ Not enough points";
+  if ((current || 0) < cost) {
+    if (feedback) feedback.textContent = "❌ Not enough points";
     return;
   }
 
@@ -183,14 +171,16 @@ async function redeem(cost, rewardName) {
     .update({ points_balance: current - cost })
     .eq("id", currentUser.id);
 
-  feedback.textContent = `✅ Redeemed ${rewardName}`;
+  if (feedback) feedback.textContent = `✅ Redeemed ${rewardName}`;
   fetchAndSyncPoints();
 }
 
-/* ===================== LEADERBOARD ===================== */
+/* ================= LEADERBOARD ================= */
 
 async function filterLeaderboard() {
   const list = document.getElementById("leaderboardList");
+  if (!list) return;
+
   list.innerHTML = "Loading...";
 
   const { data, error } = await supabase
@@ -204,25 +194,23 @@ async function filterLeaderboard() {
     return;
   }
 
-  list.innerHTML = (data || [])
-    .map((u, i) => {
-      const medal =
-        i === 0 ? "🥇" :
-        i === 1 ? "🥈" :
-        i === 2 ? "🥉" :
-        `#${i + 1}`;
+  list.innerHTML = (data || []).map((u, i) => {
+    const medal =
+      i === 0 ? "🥇" :
+      i === 1 ? "🥈" :
+      i === 2 ? "🥉" :
+      `#${i + 1}`;
 
-      return `
-        <li>
-          <span>${medal} ${u.username}</span>
-          <strong>${u.points_balance}</strong>
-        </li>
-      `;
-    })
-    .join("");
+    return `
+      <li>
+        <span>${medal} ${u.username}</span>
+        <strong>${u.points_balance}</strong>
+      </li>
+    `;
+  }).join("");
 }
 
-/* ===================== NAV ===================== */
+/* ================= NAV ================= */
 
 function navigate(sectionId) {
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
@@ -237,7 +225,7 @@ function navigate(sectionId) {
   if (sectionId === "leaderboard") filterLeaderboard();
 }
 
-/* ===================== THEME ===================== */
+/* ================= THEME ================= */
 
 function toggleTheme() {
   const root = document.documentElement;

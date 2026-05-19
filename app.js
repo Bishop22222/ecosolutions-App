@@ -1,20 +1,26 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I";
+const SUPABASE_ANON_KEY = "sb_publishable_2gcZJv2aQrLEdPtf6WPWmQ_6cCq1h1I";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 
 let currentUser = null;
 
-/* expose */
+/* expose to HTML */
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;
 window.toggleTheme = toggleTheme;
 window.navigate = navigate;
-window.redeem = redeem;
 window.addMockPoints = addMockPoints;
+window.redeem = redeem;
 window.filterLeaderboard = filterLeaderboard;
 
 /* INIT */
@@ -23,7 +29,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.documentElement.setAttribute("data-theme", savedTheme);
 
   const { data } = await supabase.auth.getSession();
-  currentUser = data.session?.user || null;
+  currentUser = data?.session?.user || null;
 
   if (currentUser) {
     await fetchAndSyncPoints();
@@ -71,15 +77,12 @@ async function handleRegister() {
     return;
   }
 
-  if (feedback) feedback.textContent = "✅ Account created. You can now log in.";
+  if (feedback) feedback.textContent = "✅ Account created. You can login now.";
   setTimeout(() => navigate("login"), 1200);
 }
 
 async function handleLogin() {
-  const email =
-    document.getElementById("username")?.value?.trim() ||
-    document.getElementById("reg-email")?.value?.trim();
-
+  const email = document.getElementById("username")?.value?.trim();
   const password = document.getElementById("password")?.value;
 
   const feedback = document.getElementById("login-feedback");
@@ -110,58 +113,73 @@ async function handleLogout() {
   navigate("login");
 }
 
-/* ================= PROFILE (CLEAN - NO INSERTS) ================= */
+/* ================= PROFILE ================= */
 
 async function fetchAndSyncPoints() {
   if (!currentUser) return 0;
 
-  const { data } = await supabase
+  let { data } = await supabase
     .from("profiles")
     .select("username, points_balance")
     .eq("id", currentUser.id)
     .maybeSingle();
 
   if (!data) {
-    // IMPORTANT:
-    // profile creation is now handled by DB trigger
-    return 0;
+    const username =
+      currentUser.user_metadata?.username ||
+      currentUser.email.split("@")[0];
+
+    const { data: newProfile } = await supabase
+      .from("profiles")
+      .insert({
+        id: currentUser.id,
+        username,
+        points_balance: 120
+      })
+      .select()
+      .single();
+
+    data = newProfile;
   }
 
-  document.getElementById("points").textContent = data.points_balance ?? 0;
-  document.querySelector(".profile-points-sync").textContent = data.points_balance ?? 0;
-  document.getElementById("profile-name-display").textContent = data.username ?? "User";
+  const pointsEl = document.getElementById("points");
+  const profilePoints = document.querySelector(".profile-points-sync");
+  const profileName = document.getElementById("profile-name-display");
 
-  return data.points_balance ?? 0;
+  if (pointsEl) pointsEl.textContent = data.points_balance;
+  if (profilePoints) profilePoints.textContent = data.points_balance;
+  if (profileName) profileName.textContent = data.username;
+
+  return data.points_balance;
 }
 
-/* ================= POINTS (SAFE VERSION) ================= */
+/* ================= POINTS ================= */
 
-async function addPoints(amount) {
+async function addMockPoints(amount) {
   if (!currentUser) return;
 
   const current = await fetchAndSyncPoints();
 
   await supabase
     .from("profiles")
-    .update({ points_balance: (current || 0) + amount })
+    .update({ points_balance: current + amount })
     .eq("id", currentUser.id);
 
-  fetchAndSyncPoints();
-}
-
-async function addMockPoints(amount) {
   const el = document.getElementById("scan-feedback");
-  await addPoints(amount);
   if (el) el.textContent = `+${amount} points added`;
+
+  fetchAndSyncPoints();
 }
 
 /* ================= REDEEM ================= */
 
 async function redeem(cost, rewardName) {
+  if (!currentUser) return;
+
   const feedback = document.getElementById("feedback");
   const current = await fetchAndSyncPoints();
 
-  if ((current || 0) < cost) {
+  if (current < cost) {
     if (feedback) feedback.textContent = "❌ Not enough points";
     return;
   }
@@ -194,20 +212,22 @@ async function filterLeaderboard() {
     return;
   }
 
-  list.innerHTML = (data || []).map((u, i) => {
-    const medal =
-      i === 0 ? "🥇" :
-      i === 1 ? "🥈" :
-      i === 2 ? "🥉" :
-      `#${i + 1}`;
+  list.innerHTML = (data || [])
+    .map((u, i) => {
+      const medal =
+        i === 0 ? "🥇" :
+        i === 1 ? "🥈" :
+        i === 2 ? "🥉" :
+        `#${i + 1}`;
 
-    return `
-      <li>
-        <span>${medal} ${u.username}</span>
-        <strong>${u.points_balance}</strong>
-      </li>
-    `;
-  }).join("");
+      return `
+        <li>
+          <span>${medal} ${u.username}</span>
+          <strong>${u.points_balance}</strong>
+        </li>
+      `;
+    })
+    .join("");
 }
 
 /* ================= NAV ================= */
@@ -219,8 +239,11 @@ function navigate(sectionId) {
   const title = document.getElementById("screen-title");
   if (title) title.textContent = sectionId;
 
-  document.getElementById("main-nav").style.display =
-    (sectionId === "login" || sectionId === "register") ? "none" : "flex";
+  const nav = document.getElementById("main-nav");
+  if (nav) {
+    nav.style.display =
+      sectionId === "login" || sectionId === "register" ? "none" : "flex";
+  }
 
   if (sectionId === "leaderboard") filterLeaderboard();
 }

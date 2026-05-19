@@ -15,16 +15,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 let currentUser = null;
 
-/* expose to HTML */
-window.handleLogin = handleLogin;
-window.handleRegister = handleRegister;
-window.handleLogout = handleLogout;
-window.toggleTheme = toggleTheme;
-window.navigate = navigate;
-window.addMockPoints = addMockPoints;
-window.redeem = redeem;
-window.filterLeaderboard = filterLeaderboard;
-
 /* INIT */
 window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme_preference") || "light";
@@ -263,3 +253,13 @@ function toggleTheme() {
   root.setAttribute("data-theme", next);
   localStorage.setItem("theme_preference", next);
 }
+
+/* expose to HTML */
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.handleLogout = handleLogout;
+window.toggleTheme = toggleTheme;
+window.navigate = navigate;
+window.addMockPoints = addMockPoints;
+window.redeem = redeem;
+window.filterLeaderboard = filterLeaderboard;

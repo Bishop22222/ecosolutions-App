@@ -66,7 +66,7 @@ async function handleRegister() {
     return;
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -75,44 +75,49 @@ async function handleRegister() {
   });
 
   if (error) {
-    if (feedback) feedback.textContent = "❌ " + error.message;
+    console.error(error);
+
+    if (feedback) {
+      feedback.textContent = "❌ " + error.message;
+    }
+
     return;
   }
 
-  if (feedback) feedback.textContent = "✅ Account created. You can login now.";
+  const user = data?.user;
+
+  if (!user) {
+    if (feedback) {
+      feedback.textContent = "❌ User creation failed";
+    }
+    return;
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .insert({
+      id: user.id,
+      username,
+      points_balance: 120
+    });
+
+  if (profileError) {
+    console.error(profileError);
+
+    if (feedback) {
+      feedback.textContent =
+        "❌ " + profileError.message;
+    }
+
+    return;
+  }
+
+  if (feedback) {
+    feedback.textContent =
+      "✅ Account created successfully";
+  }
+
   setTimeout(() => navigate("login"), 1200);
-}
-
-async function handleLogin() {
-  const email = document.getElementById("username")?.value?.trim();
-  const password = document.getElementById("password")?.value;
-
-  const feedback = document.getElementById("login-feedback");
-
-  if (!email || !password) {
-    if (feedback) feedback.textContent = "❌ Missing email or password";
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    if (feedback) feedback.textContent = "❌ " + error.message;
-    return;
-  }
-
-  currentUser = data.user;
-  await fetchAndSyncPoints();
-  navigate("dashboard");
-}
-
-async function handleLogout() {
-  await supabase.auth.signOut();
-  currentUser = null;
-  navigate("login");
 }
 
 /* ================= PROFILE ================= */

@@ -1,3 +1,5 @@
+alert("app.js loaded");
+
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";

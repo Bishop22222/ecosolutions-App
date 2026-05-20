@@ -170,7 +170,7 @@
   <ol id="leaderboardList"></ol>
 </section>
 
-<!-- ================= PROFILE (CLEAN) ================= -->
+<!-- ================= PROFILE ================= -->
 <section id="profile">
   <h2>Profile</h2>
 
@@ -188,8 +188,16 @@
     </button>
   </div>
 
-  <div class="chart-box">
+  <!-- ONLY GRAPH (PROFILE ONLY) -->
+  <div class="chart-box" style="margin-top: 20px;">
+    <h3>Your Eco Progress</h3>
+    <canvas id="profileChart"></canvas>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="chart-box" style="margin-top: 20px;">
     <h3>Settings</h3>
+
     <button class="btn" onclick="window.toggleTheme()">
       Toggle Theme
     </button>

@@ -5,36 +5,21 @@ const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I";
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
   }
-);
+});
 
 let currentUser = null;
 
-/* INIT */
+/* ================= INIT ================= */
+
 window.addEventListener("DOMContentLoaded", async () => {
+  const { data } = await supabase.auth.getSession();
 
-  const savedTheme =
-    localStorage.getItem("theme_preference") || "light";
-
-  document.documentElement.setAttribute(
-    "data-theme",
-    savedTheme
-  );
-
-  const { data } =
-    await supabase.auth.getSession();
-
-  currentUser =
-    data?.session?.user || null;
+  currentUser = data?.session?.user || null;
 
   if (currentUser) {
     await fetchAndSyncPoints();
@@ -43,259 +28,131 @@ window.addEventListener("DOMContentLoaded", async () => {
     navigate("login");
   }
 
-  supabase.auth.onAuthStateChange(
-    async (_event, session) => {
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session?.user || null;
 
-      currentUser =
-        session?.user || null;
-
-      if (currentUser) {
-        await fetchAndSyncPoints();
-        navigate("dashboard");
-      } else {
-        navigate("login");
-      }
+    if (currentUser) {
+      await fetchAndSyncPoints();
+      navigate("dashboard");
+    } else {
+      navigate("login");
     }
-  );
+  });
 });
 
 /* ================= AUTH ================= */
 
 async function handleRegister() {
-
-  const email =
-    document.getElementById("reg-email")
-      ?.value
-      ?.trim();
-
-  const username =
-    document.getElementById("reg-username")
-      ?.value
-      ?.trim();
-
-  const password =
-    document.getElementById("reg-password")
-      ?.value;
-
-  const feedback =
-    document.getElementById("register-feedback");
+  const email = document.getElementById("reg-email")?.value?.trim();
+  const username = document.getElementById("reg-username")?.value?.trim();
+  const password = document.getElementById("reg-password")?.value;
+  const feedback = document.getElementById("register-feedback");
 
   if (!email || !username || !password) {
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ Fill all fields";
-    }
-
+    if (feedback) feedback.textContent = "❌ Fill all fields";
     return;
   }
 
-  const { data, error } =
-    await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username }
-      }
-    });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username }
+    }
+  });
 
   if (error) {
-
     console.error(error);
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ " + error.message;
-    }
-
-    return;
-  }
-
-  const user = data?.user;
-
-  if (!user) {
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ User creation failed";
-    }
-
-    return;
-  }
-
-  const { error: profileError } =
-    await supabase
-      .from("profiles")
-      .insert({
-        id: user.id,
-        username,
-        points_balance: 120
-      });
-
-  if (profileError) {
-
-    console.error(profileError);
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ " + profileError.message;
-    }
-
+    if (feedback) feedback.textContent = "❌ " + error.message;
     return;
   }
 
   if (feedback) {
-    feedback.textContent =
-      "✅ Account created successfully";
+    feedback.textContent = "✅ Account created successfully";
   }
 
-  setTimeout(() => {
-    navigate("login");
-  }, 1200);
+  setTimeout(() => navigate("login"), 1200);
 }
 
 async function handleLogin() {
-
-  const email =
-    document.getElementById("username")
-      ?.value
-      ?.trim();
-
-  const password =
-    document.getElementById("password")
-      ?.value;
-
-  const feedback =
-    document.getElementById("login-feedback");
+  const email = document.getElementById("username")?.value?.trim();
+  const password = document.getElementById("password")?.value;
+  const feedback = document.getElementById("login-feedback");
 
   if (!email || !password) {
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ Missing email or password";
-    }
-
+    if (feedback) feedback.textContent = "❌ Missing email or password";
     return;
   }
 
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
   if (error) {
-
     console.error(error);
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ " + error.message;
-    }
-
+    if (feedback) feedback.textContent = "❌ " + error.message;
     return;
   }
 
   currentUser = data.user;
 
   await fetchAndSyncPoints();
-
   navigate("dashboard");
 }
 
 async function handleLogout() {
-
   await supabase.auth.signOut();
-
   currentUser = null;
-
   navigate("login");
 }
 
 /* ================= PROFILE ================= */
 
 async function fetchAndSyncPoints() {
-
   if (!currentUser) return 0;
 
-  let { data } =
-    await supabase
-      .from("profiles")
-      .select("username, points_balance")
-      .eq("id", currentUser.id)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("username, points_balance")
+    .eq("id", currentUser.id)
+    .maybeSingle();
 
-  if (!data) {
-
-    const username =
-      currentUser.user_metadata?.username ||
-      currentUser.email.split("@")[0];
-
-    const { data: newProfile } =
-      await supabase
-        .from("profiles")
-        .insert({
-          id: currentUser.id,
-          username,
-          points_balance: 120
-        })
-        .select()
-        .single();
-
-    data = newProfile;
+  if (error) {
+    console.error(error);
+    return 0;
   }
 
-  const pointsEl =
-    document.getElementById("points");
+  const points = data?.points_balance ?? 0;
 
-  const profilePoints =
-    document.querySelector(".profile-points-sync");
+  document.getElementById("points") &&
+    (document.getElementById("points").textContent = points);
 
-  const profileName =
-    document.getElementById("profile-name-display");
+  document.querySelector(".profile-points-sync") &&
+    (document.querySelector(".profile-points-sync").textContent = points);
 
-  if (pointsEl) {
-    pointsEl.textContent =
-      data.points_balance;
-  }
+  document.getElementById("profile-name-display") &&
+    (document.getElementById("profile-name-display").textContent = data?.username || "");
 
-  if (profilePoints) {
-    profilePoints.textContent =
-      data.points_balance;
-  }
-
-  if (profileName) {
-    profileName.textContent =
-      data.username;
-  }
-
-  return data.points_balance;
+  return points;
 }
 
 /* ================= POINTS ================= */
 
 async function addMockPoints(amount) {
-
   if (!currentUser) return;
 
-  const current =
-    await fetchAndSyncPoints();
+  const current = await fetchAndSyncPoints();
 
   await supabase
     .from("profiles")
     .update({
-      points_balance:
-        current + amount
+      points_balance: current + amount
     })
     .eq("id", currentUser.id);
 
-  const el =
-    document.getElementById("scan-feedback");
-
-  if (el) {
-    el.textContent =
-      `+${amount} points added`;
-  }
+  document.getElementById("scan-feedback") &&
+    (document.getElementById("scan-feedback").textContent = `+${amount} points added`);
 
   fetchAndSyncPoints();
 }
@@ -303,37 +160,25 @@ async function addMockPoints(amount) {
 /* ================= REDEEM ================= */
 
 async function redeem(cost, rewardName) {
-
   if (!currentUser) return;
 
-  const feedback =
-    document.getElementById("feedback");
+  const feedback = document.getElementById("feedback");
 
-  const current =
-    await fetchAndSyncPoints();
+  const current = await fetchAndSyncPoints();
 
   if (current < cost) {
-
-    if (feedback) {
-      feedback.textContent =
-        "❌ Not enough points";
-    }
-
+    if (feedback) feedback.textContent = "❌ Not enough points";
     return;
   }
 
   await supabase
     .from("profiles")
     .update({
-      points_balance:
-        current - cost
+      points_balance: current - cost
     })
     .eq("id", currentUser.id);
 
-  if (feedback) {
-    feedback.textContent =
-      `✅ Redeemed ${rewardName}`;
-  }
+  if (feedback) feedback.textContent = `✅ Redeemed ${rewardName}`;
 
   fetchAndSyncPoints();
 }
@@ -341,80 +186,57 @@ async function redeem(cost, rewardName) {
 /* ================= LEADERBOARD ================= */
 
 async function filterLeaderboard() {
-
-  const list =
-    document.getElementById("leaderboardList");
-
+  const list = document.getElementById("leaderboardList");
   if (!list) return;
 
   list.innerHTML = "Loading...";
 
-  const { data, error } =
-    await supabase
-      .from("profiles")
-      .select("username, points_balance")
-      .order("points_balance", {
-        ascending: false
-      })
-      .limit(10);
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("username, points_balance")
+    .order("points_balance", { ascending: false })
+    .limit(10);
 
   if (error) {
-
-    list.innerHTML =
-      "❌ Failed to load leaderboard";
-
+    list.innerHTML = "❌ Failed to load leaderboard";
     return;
   }
 
-  list.innerHTML =
-    (data || [])
-      .map((u, i) => {
+  list.innerHTML = (data || [])
+    .map((u, i) => {
+      const medal =
+        i === 0 ? "🥇"
+        : i === 1 ? "🥈"
+        : i === 2 ? "🥉"
+        : `#${i + 1}`;
 
-        const medal =
-          i === 0 ? "🥇"
-          : i === 1 ? "🥈"
-          : i === 2 ? "🥉"
-          : `#${i + 1}`;
-
-        return `
-          <li>
-            <span>${medal} ${u.username}</span>
-            <strong>${u.points_balance}</strong>
-          </li>
-        `;
-      })
-      .join("");
+      return `
+        <li>
+          <span>${medal} ${u.username}</span>
+          <strong>${u.points_balance}</strong>
+        </li>
+      `;
+    })
+    .join("");
 }
 
 /* ================= NAV ================= */
 
 function navigate(sectionId) {
+  document.querySelectorAll("section").forEach(s =>
+    s.classList.remove("active")
+  );
 
-  document
-    .querySelectorAll("section")
-    .forEach(s =>
-      s.classList.remove("active")
-    );
+  document.getElementById(sectionId)?.classList.add("active");
 
-  document
-    .getElementById(sectionId)
-    ?.classList.add("active");
+  const title = document.getElementById("screen-title");
+  if (title) title.textContent = sectionId;
 
-  const title =
-    document.getElementById("screen-title");
-
-  if (title) {
-    title.textContent = sectionId;
-  }
-
-  const nav =
-    document.getElementById("main-nav");
+  const nav = document.getElementById("main-nav");
 
   if (nav) {
-
     nav.style.display =
-      sectionId === "login" ||
-      sectionId === "register"
+      sectionId === "login" || sectionId === "register"
         ? "none"
         : "flex";
   }
@@ -427,9 +249,7 @@ function navigate(sectionId) {
 /* ================= THEME ================= */
 
 function toggleTheme() {
-
-  const root =
-    document.documentElement;
+  const root = document.documentElement;
 
   const next =
     root.getAttribute("data-theme") === "dark"
@@ -437,15 +257,10 @@ function toggleTheme() {
       : "dark";
 
   root.setAttribute("data-theme", next);
-
-  localStorage.setItem(
-    "theme_preference",
-    next
-  );
+  localStorage.setItem("theme_preference", next);
 }
 
-/* expose to HTML */
-
+/* expose */
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;

@@ -69,17 +69,55 @@
 <section id="dashboard">
   <h2>Dashboard</h2>
 
-  <p>Available Balance: <strong id="points">0</strong> pts</p>
+  <!-- POINTS SUMMARY -->
+  <div class="stats-grid">
 
-  <div class="chart-box">
-    <h3>Monthly Recycling Performance (kg)</h3>
+    <div class="stat-card">
+      <h3>Available Points</h3>
+      <p><strong id="points">0</strong> pts</p>
+    </div>
 
-    <!-- IMPORTANT: Canvas -->
-    <canvas id="performanceChart"></canvas>
+    <div class="stat-card">
+      <h3>Eco Level</h3>
+      <p>Eco Hero 🌿</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>Weekly Goal</h3>
+      <p>3 / 5 tasks completed</p>
+    </div>
 
   </div>
-</section>
 
+  <!-- DAILY CHALLENGE -->
+  <div class="chart-box" style="margin-top: 20px;">
+    <h3>Daily Challenge</h3>
+    <p>Recycle 2kg of waste today to earn bonus points.</p>
+
+    <button class="btn" onclick="window.addMockPoints(10)">
+      Complete Challenge (+10 pts)
+    </button>
+  </div>
+
+  <!-- ACTIVITY FEED -->
+  <div class="chart-box" style="margin-top: 20px;">
+    <h3>Recent Activity</h3>
+
+    <ul>
+      <li>✔ You earned points from scanning waste</li>
+      <li>✔ You joined the Eco leaderboard</li>
+      <li>✔ You redeemed a reward</li>
+    </ul>
+  </div>
+
+  <!-- MAP -->
+  <div class="chart-box" style="margin-top: 20px;">
+    <h3>Nearby Recycling Points</h3>
+    <div id="map"></div>
+  </div>
+
+</section>
+  
 <!-- ================= NAV ================= -->
 <nav class="bottom-nav" id="main-nav" style="display:none;">
   <button onclick="window.navigate('dashboard')">Home</button>

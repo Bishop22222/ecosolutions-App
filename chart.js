@@ -1,16 +1,42 @@
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
 
-  const ctx = document.getElementById("profileChart");
+  const canvas = document.getElementById("profileChart");
+  if (!canvas) return;
 
-  if (!ctx) return;
+  // wait for supabase (global from app.js)
+  if (!window.supabase || !window.currentUser) return;
 
-  new Chart(ctx, {
+  const user = window.currentUser;
+
+  // fetch real history
+  const { data, error } = await window.supabase
+    .from("points_history")
+    .select("points, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.log("Chart error:", error);
+    return;
+  }
+
+  // group by day (simple version)
+  const labels = [];
+  const values = [];
+
+  (data || []).forEach(item => {
+    const date = new Date(item.created_at).toLocaleDateString();
+    labels.push(date);
+    values.push(item.points);
+  });
+
+  new Chart(canvas, {
     type: "line",
     data: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      labels: labels,
       datasets: [{
-        label: "Eco Activity",
-        data: [4, 9, 6, 12, 15, 11, 20],
+        label: "Your Points History",
+        data: values,
         borderColor: "#22c55e",
         backgroundColor: "rgba(34,197,94,0.2)",
         tension: 0.4,
@@ -25,8 +51,12 @@ window.addEventListener("load", () => {
         }
       },
       scales: {
-        x: { ticks: { color: "#fff" } },
-        y: { ticks: { color: "#fff" } }
+        x: {
+          ticks: { color: "#fff" }
+        },
+        y: {
+          ticks: { color: "#fff" }
+        }
       }
     }
   });

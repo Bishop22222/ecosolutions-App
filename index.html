@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- SAFE CSP (keeps Supabase + Chart.js working) -->
+  <!-- SAFE CSP -->
   <meta http-equiv="Content-Security-Policy"
     content="
       default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
@@ -19,19 +19,13 @@
   <title>EcoSolutions App</title>
 
   <link rel="stylesheet" href="style.css">
-
-  <!-- Leaflet map (optional but safe if you use map later) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 
 <body>
 
 <header>
   <h1 id="screen-title">Login</h1>
-
-  <button class="theme-toggle" onclick="window.toggleTheme()">
-    Toggle Theme
-  </button>
+  <button class="theme-toggle" onclick="window.toggleTheme()">Theme</button>
 </header>
 
 <!-- ================= LOGIN ================= -->
@@ -67,7 +61,7 @@
   <div id="register-feedback"></div>
 </section>
 
-<!-- ================= DASHBOARD ================= -->
+<!-- ================= DASHBOARD (HOME) ================= -->
 <section id="dashboard">
 
   <h2>Dashboard</h2>
@@ -89,7 +83,7 @@
 
     <div class="stat-card">
       <h3>Status</h3>
-      <p>Active User</p>
+      <p>Active</p>
     </div>
 
   </div>
@@ -97,10 +91,10 @@
   <!-- DAILY CHALLENGE -->
   <div class="chart-box">
     <h3>Daily Challenge</h3>
-    <p>Recycle 2kg today for bonus points</p>
+    <p>Recycle 2kg today</p>
 
     <button class="btn" onclick="window.addMockPoints(10)">
-      Complete Challenge (+10)
+      Complete (+10)
     </button>
   </div>
 
@@ -109,16 +103,16 @@
     <h3>Recent Activity</h3>
 
     <ul>
-      <li>✔ Earned points from scan</li>
-      <li>✔ Joined leaderboard</li>
+      <li>✔ Scanned waste</li>
+      <li>✔ Earned points</li>
       <li>✔ Redeemed reward</li>
     </ul>
   </div>
 
-  <!-- MAP -->
+  <!-- PROGRESS GRAPH (ONLY HERE) -->
   <div class="chart-box">
-    <h3>Nearby Recycling Points</h3>
-    <div id="map"></div>
+    <h3>Weekly Progress</h3>
+    <canvas id="homeChart"></canvas>
   </div>
 
 </section>
@@ -128,11 +122,11 @@
   <h2>Scan Waste</h2>
 
   <div class="camera-simulation">
-    <p>📷 Camera Simulation</p>
+    📷 Camera View
   </div>
 
   <button class="btn" onclick="window.addMockPoints(25)">
-    Upload Photo (+25)
+    Upload (+25)
   </button>
 
   <button class="btn" onclick="window.addMockPoints(15)">
@@ -149,21 +143,21 @@
   <div class="reward-card">
     <p>📱 Data Bundle</p>
     <button class="btn" onclick="window.redeem(20,'Data')">
-      Redeem (20)
+      Redeem
     </button>
   </div>
 
   <div class="reward-card">
     <p>📞 Airtime</p>
     <button class="btn" onclick="window.redeem(15,'Airtime')">
-      Redeem (15)
+      Redeem
     </button>
   </div>
 
   <div class="reward-card">
     <p>🛍 Voucher</p>
     <button class="btn" onclick="window.redeem(25,'Voucher')">
-      Redeem (25)
+      Redeem
     </button>
   </div>
 
@@ -173,68 +167,35 @@
 <!-- ================= LEADERBOARD ================= -->
 <section id="leaderboard">
   <h2>Leaderboard</h2>
-
   <ol id="leaderboardList"></ol>
 </section>
-  
-<!-- ================= PROFILE ================= -->
+
+<!-- ================= PROFILE (CLEAN) ================= -->
 <section id="profile">
+  <h2>Profile</h2>
 
-  <h2>My Profile</h2>
-
-  <!-- USER CARD -->
   <div class="profile-card">
-
-    <div class="avatar-circle">
-      🌿
-    </div>
+    <div class="avatar-placeholder">🌿</div>
 
     <h3 id="profile-name-display">Loading...</h3>
-    <p class="muted-text">EcoSolutions Member</p>
 
-    <div class="profile-badge">
-      Eco Hero Level
-    </div>
+    <p>Rank: Eco Hero</p>
 
+    <p>Points: <strong class="profile-points-sync">0</strong></p>
+
+    <button class="btn logout-btn" onclick="window.handleLogout()">
+      Logout
+    </button>
   </div>
 
-  <!-- POINTS SUMMARY -->
-  <div class="stat-card">
-    <h3>Total Points</h3>
-    <p><strong class="profile-points-sync">0</strong> pts</p>
-  </div>
-
-  <!-- ACTIVITY STATS -->
-  <div class="stat-card">
-    <h3>Eco Activity</h3>
-
-    <p>♻ Scans completed: <strong>12</strong></p>
-    <p>🎯 Challenges done: <strong>5</strong></p>
-    <p>🏆 Rank: <strong>#3</strong></p>
-  </div>
-
-  <!-- SETTINGS -->
   <div class="chart-box">
-    <h3>Account Settings</h3>
-
+    <h3>Settings</h3>
     <button class="btn" onclick="window.toggleTheme()">
       Toggle Theme
     </button>
-
-    <button class="btn logout-btn" onclick="window.handleLogout()">
-      Logout Account
-    </button>
-  </div>
-
-</section>
-
-  <!-- ================= PROFILE GRAPH ================= -->
-  <div class="chart-box" style="margin-top: 20px;">
-    <h3>Eco Activity Progress</h3>
-    <canvas id="profileChart"></canvas>
   </div>
 </section>
-  
+
 <!-- ================= NAV ================= -->
 <nav class="bottom-nav" id="main-nav" style="display:none;">
   <button onclick="window.navigate('dashboard')">Home</button>
@@ -246,7 +207,6 @@
 
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="charts.js"></script>
 <script type="module" src="app.js"></script>
 

@@ -1,9 +1,12 @@
+
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+/* ================= SUPABASE ================= */
 
 const SUPABASE_URL = "https://jrcifafkepnwfixllesj.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyY2lmYWZrZXBud2ZpeGxsZXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODgxNTIsImV4cCI6MjA5NDA2NDE1Mn0.cvcBrggZG3DFtyObdqZPIdzZKF6TA4lcLSnDoJhfh5I"; // keep your real key
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -12,14 +15,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+/* ================= GLOBAL STATE ================= */
+
 let currentUser = null;
+
+/* expose for charts.js */
+window.supabase = supabase;
+window.currentUser = null;
 
 /* ================= INIT ================= */
 
 window.addEventListener("DOMContentLoaded", async () => {
+
   const { data } = await supabase.auth.getSession();
 
   currentUser = data?.session?.user || null;
+  window.currentUser = currentUser;
 
   if (currentUser) {
     await fetchAndSyncPoints();
@@ -30,6 +41,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   supabase.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
+    window.currentUser = currentUser;
 
     if (currentUser) {
       await fetchAndSyncPoints();
@@ -46,14 +58,10 @@ async function handleRegister() {
   const email = document.getElementById("reg-email")?.value?.trim();
   const username = document.getElementById("reg-username")?.value?.trim();
   const password = document.getElementById("reg-password")?.value;
-  const feedback = document.getElementById("register-feedback");
 
-  if (!email || !username || !password) {
-    if (feedback) feedback.textContent = "❌ Fill all fields";
-    return;
-  }
+  if (!email || !username || !password) return;
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -62,27 +70,16 @@ async function handleRegister() {
   });
 
   if (error) {
-    console.error(error);
-    if (feedback) feedback.textContent = "❌ " + error.message;
+    console.log(error.message);
     return;
   }
 
-  if (feedback) {
-    feedback.textContent = "✅ Account created successfully";
-  }
-
-  setTimeout(() => navigate("login"), 1200);
+  navigate("login");
 }
 
 async function handleLogin() {
   const email = document.getElementById("username")?.value?.trim();
   const password = document.getElementById("password")?.value;
-  const feedback = document.getElementById("login-feedback");
-
-  if (!email || !password) {
-    if (feedback) feedback.textContent = "❌ Missing email or password";
-    return;
-  }
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -90,12 +87,12 @@ async function handleLogin() {
   });
 
   if (error) {
-    console.error(error);
-    if (feedback) feedback.textContent = "❌ " + error.message;
+    console.log(error.message);
     return;
   }
 
   currentUser = data.user;
+  window.currentUser = currentUser;
 
   await fetchAndSyncPoints();
   navigate("dashboard");
@@ -104,46 +101,39 @@ async function handleLogin() {
 async function handleLogout() {
   await supabase.auth.signOut();
   currentUser = null;
+  window.currentUser = null;
   navigate("login");
 }
 
-/* ================= PROFILE ================= */
+/* ================= POINTS ================= */
 
 async function fetchAndSyncPoints() {
   if (!currentUser) return 0;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("profiles")
     .select("username, points_balance")
     .eq("id", currentUser.id)
-    .maybeSingle();
+    .single();
 
-  if (error) {
-    console.error(error);
-    return 0;
-  }
+  const points = data?.points_balance || 0;
 
-  const points = data?.points_balance ?? 0;
-
-  document.getElementById("points") &&
-    (document.getElementById("points").textContent = points);
-
-  document.querySelector(".profile-points-sync") &&
-    (document.querySelector(".profile-points-sync").textContent = points);
-
-  document.getElementById("profile-name-display") &&
-    (document.getElementById("profile-name-display").textContent = data?.username || "");
+  document.getElementById("points").textContent = points;
+  document.querySelector(".profile-points-sync").textContent = points;
+  document.getElementById("profile-name-display").textContent =
+    data?.username || "User";
 
   return points;
 }
 
-/* ================= POINTS ================= */
+/* ================= ADD POINTS + HISTORY ================= */
 
 async function addMockPoints(amount) {
   if (!currentUser) return;
 
   const current = await fetchAndSyncPoints();
 
+  // update total
   await supabase
     .from("profiles")
     .update({
@@ -151,8 +141,11 @@ async function addMockPoints(amount) {
     })
     .eq("id", currentUser.id);
 
-  document.getElementById("scan-feedback") &&
-    (document.getElementById("scan-feedback").textContent = `+${amount} points added`);
+  // SAVE HISTORY (REAL DATA FOR GRAPH)
+  await supabase.from("points_history").insert({
+    user_id: currentUser.id,
+    points: amount
+  });
 
   fetchAndSyncPoints();
 }
@@ -162,14 +155,9 @@ async function addMockPoints(amount) {
 async function redeem(cost, rewardName) {
   if (!currentUser) return;
 
-  const feedback = document.getElementById("feedback");
-
   const current = await fetchAndSyncPoints();
 
-  if (current < cost) {
-    if (feedback) feedback.textContent = "❌ Not enough points";
-    return;
-  }
+  if (current < cost) return;
 
   await supabase
     .from("profiles")
@@ -177,8 +165,6 @@ async function redeem(cost, rewardName) {
       points_balance: current - cost
     })
     .eq("id", currentUser.id);
-
-  if (feedback) feedback.textContent = `✅ Redeemed ${rewardName}`;
 
   fetchAndSyncPoints();
 }
@@ -189,48 +175,33 @@ async function filterLeaderboard() {
   const list = document.getElementById("leaderboardList");
   if (!list) return;
 
-  list.innerHTML = "Loading...";
-
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("profiles")
     .select("username, points_balance")
     .order("points_balance", { ascending: false })
     .limit(10);
 
-  if (error) {
-    list.innerHTML = "❌ Failed to load leaderboard";
-    return;
-  }
-
   list.innerHTML = (data || [])
-    .map((u, i) => {
-      const medal =
-        i === 0 ? "🥇"
-        : i === 1 ? "🥈"
-        : i === 2 ? "🥉"
-        : `#${i + 1}`;
-
-      return `
-        <li>
-          <span>${medal} ${u.username}</span>
-          <strong>${u.points_balance}</strong>
-        </li>
-      `;
-    })
+    .map((u, i) => `
+      <li>
+        <span>#${i + 1} ${u.username}</span>
+        <strong>${u.points_balance}</strong>
+      </li>
+    `)
     .join("");
 }
 
-/* ================= NAV ================= */
+/* ================= NAVIGATION ================= */
 
 function navigate(sectionId) {
+
   document.querySelectorAll("section").forEach(s =>
     s.classList.remove("active")
   );
 
   document.getElementById(sectionId)?.classList.add("active");
 
-  const title = document.getElementById("screen-title");
-  if (title) title.textContent = sectionId;
+  document.getElementById("screen-title").textContent = sectionId;
 
   const nav = document.getElementById("main-nav");
 
@@ -257,10 +228,10 @@ function toggleTheme() {
       : "dark";
 
   root.setAttribute("data-theme", next);
-  localStorage.setItem("theme_preference", next);
 }
 
-/* expose */
+/* ================= EXPOSE FUNCTIONS ================= */
+
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
 window.handleLogout = handleLogout;

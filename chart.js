@@ -15,3 +15,30 @@ new Chart(ctx, {
         responsive: true
     }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const ctx = document.getElementById("performanceChart");
+
+    if (!ctx) {
+        console.log("Canvas not found");
+        return;
+    }
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+            datasets: [{
+                label: "Recycling KG",
+                data: [12, 19, 8, 15, 25],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+});

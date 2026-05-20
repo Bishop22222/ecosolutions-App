@@ -36,9 +36,7 @@
     <input type="text" id="username" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
 
-    <button class="btn" onclick="window.handleLogin()">
-      Login
-    </button>
+    <button class="btn" onclick="window.handleLogin()">Login</button>
   </div>
 
   <div id="login-feedback"></div>
@@ -53,55 +51,28 @@
     <input type="text" id="reg-username" placeholder="Username">
     <input type="password" id="reg-password" placeholder="Password">
 
-    <button class="btn" onclick="window.handleRegister()">
-      Register
-    </button>
+    <button class="btn" onclick="window.handleRegister()">Register</button>
   </div>
 
   <div id="register-feedback"></div>
 </section>
 
-<!-- ================= DASHBOARD (HOME) ================= -->
+<!-- ================= DASHBOARD ================= -->
 <section id="dashboard">
-
   <h2>Dashboard</h2>
 
   <p>Available Points: <strong id="points">0</strong></p>
 
-  <!-- STATS -->
-  <div class="stats-grid">
-
-    <div class="stat-card">
-      <h3>Eco Level</h3>
-      <p>Eco Hero 🌿</p>
-    </div>
-
-    <div class="stat-card">
-      <h3>Weekly Goal</h3>
-      <p>3 / 5 tasks</p>
-    </div>
-
-    <div class="stat-card">
-      <h3>Status</h3>
-      <p>Active</p>
-    </div>
-
-  </div>
-
-  <!-- DAILY CHALLENGE -->
   <div class="chart-box">
     <h3>Daily Challenge</h3>
     <p>Recycle 2kg today</p>
-
     <button class="btn" onclick="window.addMockPoints(10)">
       Complete (+10)
     </button>
   </div>
 
-  <!-- ACTIVITY -->
   <div class="chart-box">
     <h3>Recent Activity</h3>
-
     <ul>
       <li>✔ Scanned waste</li>
       <li>✔ Earned points</li>
@@ -109,29 +80,20 @@
     </ul>
   </div>
 
-  <!-- PROGRESS GRAPH (ONLY HERE) -->
   <div class="chart-box">
     <h3>Weekly Progress</h3>
     <canvas id="homeChart"></canvas>
   </div>
-
 </section>
 
 <!-- ================= SCAN ================= -->
 <section id="scan">
   <h2>Scan Waste</h2>
 
-  <div class="camera-simulation">
-    📷 Camera View
-  </div>
+  <div class="camera-simulation">📷 Camera View</div>
 
-  <button class="btn" onclick="window.addMockPoints(25)">
-    Upload (+25)
-  </button>
-
-  <button class="btn" onclick="window.addMockPoints(15)">
-    Scan QR (+15)
-  </button>
+  <button class="btn" onclick="window.addMockPoints(25)">Upload (+25)</button>
+  <button class="btn" onclick="window.addMockPoints(15)">Scan QR (+15)</button>
 
   <div id="scan-feedback"></div>
 </section>
@@ -142,23 +104,17 @@
 
   <div class="reward-card">
     <p>📱 Data Bundle</p>
-    <button class="btn" onclick="window.redeem(20,'Data')">
-      Redeem
-    </button>
+    <button class="btn" onclick="window.redeem(20,'Data')">Redeem</button>
   </div>
 
   <div class="reward-card">
     <p>📞 Airtime</p>
-    <button class="btn" onclick="window.redeem(15,'Airtime')">
-      Redeem
-    </button>
+    <button class="btn" onclick="window.redeem(15,'Airtime')">Redeem</button>
   </div>
 
   <div class="reward-card">
     <p>🛍 Voucher</p>
-    <button class="btn" onclick="window.redeem(25,'Voucher')">
-      Redeem
-    </button>
+    <button class="btn" onclick="window.redeem(25,'Voucher')">Redeem</button>
   </div>
 
   <div id="feedback"></div>
@@ -188,116 +144,53 @@
     </button>
   </div>
 
-  <!-- ONLY GRAPH (PROFILE ONLY) -->
   <div class="chart-box" style="margin-top: 20px;">
     <h3>Your Eco Progress</h3>
     <canvas id="profileChart"></canvas>
   </div>
+</section>
 
- <!-- ================= SETTINGS ================= -->
+<!-- ================= SETTINGS ================= -->
 <section id="settings">
   <h2>Settings</h2>
 
-  <!-- ================= APPEARANCE ================= -->
   <div class="chart-box">
     <h3>Appearance</h3>
-
     <button class="btn" onclick="window.toggleTheme()">
       Toggle Light / Dark Mode
     </button>
-
-    <p style="font-size: 12px; opacity: 0.7;">
-      Switch between light and dark mode for better viewing comfort.
-    </p>
   </div>
 
-  <!-- ================= ACCOUNT ================= -->
   <div class="chart-box" style="margin-top: 20px;">
     <h3>Account</h3>
-
     <button class="btn logout-btn" onclick="window.handleLogout()">
       Logout Account
     </button>
-
-    <button class="btn" style="margin-top:10px; background:#555;">
-      Change Password (coming soon)
-    </button>
-
-    <button class="btn" style="margin-top:10px; background:#555;">
-      Update Username (coming soon)
-    </button>
   </div>
 
-  <!-- ================= NOTIFICATIONS ================= -->
   <div class="chart-box" style="margin-top: 20px;">
     <h3>Notifications</h3>
-
-    <label>
-      <input type="checkbox" checked>
-      Push Notifications
-    </label>
-    <br><br>
-
-    <label>
-      <input type="checkbox" checked>
-      Weekly Eco Report
-    </label>
-    <br><br>
-
-    <label>
-      <input type="checkbox">
-      Leaderboard Alerts
-    </label>
-
-    <p style="font-size: 12px; opacity: 0.7;">
-      Control what updates you receive.
-    </p>
+    <label><input type="checkbox" checked> Push Notifications</label><br><br>
+    <label><input type="checkbox" checked> Weekly Report</label><br><br>
+    <label><input type="checkbox"> Leaderboard Alerts</label>
   </div>
 
-  <!-- ================= PRIVACY ================= -->
   <div class="chart-box" style="margin-top: 20px;">
     <h3>Privacy</h3>
-
-    <label>
-      <input type="checkbox" checked>
-      Show me on leaderboard
-    </label>
-    <br><br>
-
-    <label>
-      <input type="checkbox">
-      Allow data tracking for analytics
-    </label>
-
-    <p style="font-size: 12px; opacity: 0.7;">
-      Manage how your data is used inside the app.
-    </p>
+    <label><input type="checkbox" checked> Show on leaderboard</label><br><br>
+    <label><input type="checkbox"> Allow analytics tracking</label>
   </div>
 
-  <!-- ================= DATA CONTROL ================= -->
   <div class="chart-box" style="margin-top: 20px;">
     <h3>Data Control</h3>
-
-    <button class="btn" style="background:#d32f2f;">
-      Delete My Progress Data
-    </button>
-
-    <button class="btn" style="margin-top:10px; background:#f57c00;">
-      Export My Data
-    </button>
-
-    <p style="font-size: 12px; opacity: 0.7;">
-      Manage your stored eco activity data.
-    </p>
+    <button class="btn" style="background:#d32f2f;">Delete Data</button>
+    <button class="btn" style="background:#f57c00; margin-top:10px;">Export Data</button>
   </div>
 
-  <!-- ================= APP INFO ================= -->
   <div class="chart-box" style="margin-top: 20px;">
-    <h3>App Information</h3>
-
+    <h3>App Info</h3>
     <p><strong>EcoSolutions</strong></p>
-    <p>Version: 1.0.0</p>
-    <p>Built for sustainable recycling impact 🌱</p>
+    <p>Version 1.0.0</p>
   </div>
 </section>
 

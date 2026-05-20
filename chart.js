@@ -1,39 +1,21 @@
 window.addEventListener("load", () => {
 
-  const profileCanvas = document.getElementById("profileChart");
+  const ctx = document.getElementById("homeChart");
 
-  if (!profileCanvas) return;
+  if (!ctx) return;
 
-  new Chart(profileCanvas, {
+  new Chart(ctx, {
     type: "line",
     data: {
       labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
       datasets: [{
-        label: "Eco Activity",
-        data: [5, 10, 7, 12, 18, 15, 22],
+        label: "Progress",
+        data: [5, 10, 8, 15, 12, 18, 25],
         borderColor: "#22c55e",
         backgroundColor: "rgba(34,197,94,0.2)",
         tension: 0.4,
         fill: true
       }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          labels: {
-            color: "#fff"
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: "#fff" }
-        },
-        y: {
-          ticks: { color: "#fff" }
-        }
-      }
     }
   });
 

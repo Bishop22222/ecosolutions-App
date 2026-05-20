@@ -1,24 +1,40 @@
 window.addEventListener("load", () => {
 
-    const canvas = document.getElementById("performanceChart");
+  const profileCanvas = document.getElementById("profileChart");
 
-    if (!canvas) {
-        console.log("Canvas not found");
-        return;
-    }
+  if (!profileCanvas) return;
 
-    new Chart(canvas, {
-        type: "bar",
-        data: {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-            datasets: [{
-                label: "Recycling KG",
-                data: [12, 19, 8, 15, 25]
-            }]
-        },
-        options: {
-            responsive: true
+  new Chart(profileCanvas, {
+    type: "line",
+    data: {
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      datasets: [{
+        label: "Eco Activity",
+        data: [5, 10, 7, 12, 18, 15, 22],
+        borderColor: "#22c55e",
+        backgroundColor: "rgba(34,197,94,0.2)",
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#fff"
+          }
         }
-    });
+      },
+      scales: {
+        x: {
+          ticks: { color: "#fff" }
+        },
+        y: {
+          ticks: { color: "#fff" }
+        }
+      }
+    }
+  });
 
 });

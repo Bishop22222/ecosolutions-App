@@ -176,24 +176,57 @@
 
   <ol id="leaderboardList"></ol>
 </section>
-
+  
 <!-- ================= PROFILE ================= -->
 <section id="profile">
-  <h2>Profile</h2>
 
+  <h2>My Profile</h2>
+
+  <!-- USER CARD -->
   <div class="profile-card">
-    <div class="avatar-placeholder">🌿</div>
+
+    <div class="avatar-circle">
+      🌿
+    </div>
 
     <h3 id="profile-name-display">Loading...</h3>
+    <p class="muted-text">EcoSolutions Member</p>
 
-    <p>Rank: Eco Hero</p>
+    <div class="profile-badge">
+      Eco Hero Level
+    </div>
 
-    <p>Points: <strong class="profile-points-sync">0</strong></p>
+  </div>
+
+  <!-- POINTS SUMMARY -->
+  <div class="stat-card">
+    <h3>Total Points</h3>
+    <p><strong class="profile-points-sync">0</strong> pts</p>
+  </div>
+
+  <!-- ACTIVITY STATS -->
+  <div class="stat-card">
+    <h3>Eco Activity</h3>
+
+    <p>♻ Scans completed: <strong>12</strong></p>
+    <p>🎯 Challenges done: <strong>5</strong></p>
+    <p>🏆 Rank: <strong>#3</strong></p>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="chart-box">
+    <h3>Account Settings</h3>
+
+    <button class="btn" onclick="window.toggleTheme()">
+      Toggle Theme
+    </button>
 
     <button class="btn logout-btn" onclick="window.handleLogout()">
-      Logout
+      Logout Account
     </button>
   </div>
+
+</section>
 
   <!-- ================= PROFILE GRAPH ================= -->
   <div class="chart-box" style="margin-top: 20px;">
